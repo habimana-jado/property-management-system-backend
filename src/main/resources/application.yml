@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: property-management-system
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
