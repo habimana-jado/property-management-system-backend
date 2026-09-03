@@ -29,22 +29,22 @@ public class HotelBranchController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findOne(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelBranchService.findOne(UUID.fromString(id)));
+    public ResponseEntity<?> findOne(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelBranchService.findOne(id));
     }
 
     @GetMapping("/hotel/{id}")
-    public ResponseEntity<?> findByHotel(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelBranchService.findByHotel(UUID.fromString(id)));
+    public ResponseEntity<?> findByHotel(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelBranchService.findByHotel(id));
     }
 
     @PatchMapping("/activate/{id}")
-    public ResponseEntity<?> activate(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelBranchService.activate(UUID.fromString(id)));
+    public ResponseEntity<?> activate(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelBranchService.activate(id));
     }
 
     @PatchMapping("/deactivate/{id}")
-    public ResponseEntity<?> deactivate(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelBranchService.deactivate(UUID.fromString(id)));
+    public ResponseEntity<?> deactivate(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelBranchService.deactivate(id));
     }
 }

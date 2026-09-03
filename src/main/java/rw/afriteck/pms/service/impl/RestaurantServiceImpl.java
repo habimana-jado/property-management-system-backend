@@ -3,6 +3,7 @@ package rw.afriteck.pms.service.impl;
 import org.springframework.stereotype.Service;
 import rw.afriteck.pms.dtos.RestaurantRequest;
 import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.exception.ResourceNotFoundException;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.model.Restaurant;
 import rw.afriteck.pms.repository.RestaurantRepo;
@@ -42,32 +43,24 @@ public class RestaurantServiceImpl implements IRestaurantService {
 
     @Override
     public Restaurant findOne(UUID restaurantId) {
-        Optional<Restaurant> restaurant = this.restaurantRepo.findById(restaurantId);
-        return restaurant.orElse(null);
+        return this.restaurantRepo.findById(restaurantId)
+                .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
     }
 
     @Override
     public Restaurant activate(UUID restaurantId) {
-        Optional<Restaurant> restaurant = this.restaurantRepo.findById(restaurantId);
-        if(restaurant.isPresent()){
-            Restaurant restaurant1 = restaurant.get();
-            restaurant1.setStatus(EStatus.ACTIVE);
-            return this.restaurantRepo.save(restaurant1);
-        }else {
-            return null;
-        }
+        Restaurant restaurant = this.restaurantRepo.findById(restaurantId)
+                .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+        restaurant.setStatus(EStatus.ACTIVE);
+        return this.restaurantRepo.save(restaurant);
     }
 
     @Override
     public Restaurant deactivate(UUID restaurantId) {
-        Optional<Restaurant> restaurant = this.restaurantRepo.findById(restaurantId);
-        if(restaurant.isPresent()){
-            Restaurant restaurant1 = restaurant.get();
-            restaurant1.setStatus(EStatus.INACTIVE);
-            return this.restaurantRepo.save(restaurant1);
-        }else {
-            return null;
-        }
+        Restaurant restaurant = this.restaurantRepo.findById(restaurantId)
+                .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+        restaurant.setStatus(EStatus.INACTIVE);
+        return this.restaurantRepo.save(restaurant);
     }
 
     @Override

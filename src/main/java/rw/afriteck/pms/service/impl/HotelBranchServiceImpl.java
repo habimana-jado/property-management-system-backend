@@ -3,6 +3,7 @@ package rw.afriteck.pms.service.impl;
 import org.springframework.stereotype.Service;
 import rw.afriteck.pms.dtos.HotelBranchRequest;
 import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.exception.ResourceNotFoundException;
 import rw.afriteck.pms.model.Hotel;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.repository.HotelBranchRepo;
@@ -44,32 +45,25 @@ public class HotelBranchServiceImpl implements IHotelBranchService {
 
     @Override
     public HotelBranch findOne(UUID hotelBranchId) {
-        Optional<HotelBranch> hotelBranch = this.hotelBranchRepo.findById(hotelBranchId);
-        return hotelBranch.orElseThrow(null);
+        return this.hotelBranchRepo.findById(hotelBranchId)
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
     }
 
     @Override
     public HotelBranch activate(UUID hotelBranchId) {
-        Optional<HotelBranch> hotelBranch = this.hotelBranchRepo.findById(hotelBranchId);
-        if(hotelBranch.isPresent()){
-            HotelBranch hotelBranch1 = hotelBranch.get();
-            hotelBranch1.setStatus(EStatus.ACTIVE);
-            return this.hotelBranchRepo.save(hotelBranch1);
-        }else{
-            return null;
-        }
+        HotelBranch hotelBranch = this.hotelBranchRepo.findById(hotelBranchId)
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
+        hotelBranch.setStatus(EStatus.ACTIVE);
+        return this.hotelBranchRepo.save(hotelBranch);
+
     }
 
     @Override
     public HotelBranch deactivate(UUID hotelBranchId) {
-        Optional<HotelBranch> hotelBranch = this.hotelBranchRepo.findById(hotelBranchId);
-        if(hotelBranch.isPresent()){
-            HotelBranch hotelBranch1 = hotelBranch.get();
-            hotelBranch1.setStatus(EStatus.INACTIVE);
-            return this.hotelBranchRepo.save(hotelBranch1);
-        }else{
-            return null;
-        }
+        HotelBranch hotelBranch = this.hotelBranchRepo.findById(hotelBranchId)
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
+        hotelBranch.setStatus(EStatus.INACTIVE);
+        return this.hotelBranchRepo.save(hotelBranch);
     }
 
     @Override

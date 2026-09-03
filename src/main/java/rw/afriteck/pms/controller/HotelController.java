@@ -34,12 +34,12 @@ public class HotelController {
     }
 
     @PatchMapping("/activate/{id}")
-    public ResponseEntity<?> activate(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelService.activate(UUID.fromString(id)));
+    public ResponseEntity<?> activate(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelService.activate(id));
     }
 
     @PatchMapping("/deactivate/{id}")
-    public ResponseEntity<?> deactivate(@PathVariable("id") String id){
-        return ResponseEntity.ok(this.hotelService.deactivate(UUID.fromString(id)));
+    public ResponseEntity<?> deactivate(@PathVariable("id") UUID id){
+        return ResponseEntity.ok(this.hotelService.deactivate(id));
     }
 }

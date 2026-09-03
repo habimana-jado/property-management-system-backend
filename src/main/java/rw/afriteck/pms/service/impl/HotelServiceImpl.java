@@ -3,6 +3,7 @@ package rw.afriteck.pms.service.impl;
 import org.springframework.stereotype.Service;
 import rw.afriteck.pms.dtos.HotelRequest;
 import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.exception.ResourceNotFoundException;
 import rw.afriteck.pms.model.Hotel;
 import rw.afriteck.pms.repository.HotelRepo;
 import rw.afriteck.pms.service.IHotelService;
@@ -35,31 +36,23 @@ public class HotelServiceImpl implements IHotelService {
 
     @Override
     public Hotel findOne(UUID hotelId) {
-        Optional<Hotel> hotel = this.hotelRepo.findById(hotelId);
-        return hotel.orElseThrow(null);
+        return this.hotelRepo.findById(hotelId)
+                .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
     }
 
     @Override
     public Hotel activate(UUID hotelId) {
-        Optional<Hotel> hotel = this.hotelRepo.findById(hotelId);
-        if(hotel.isPresent()){
-            Hotel hotel1 = hotel.get();
-            hotel1.setStatus(EStatus.ACTIVE);
-            return this.hotelRepo.save(hotel1);
-        }else{
-            return null;
-        }
+        Hotel hotel = this.hotelRepo.findById(hotelId)
+                .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
+        hotel.setStatus(EStatus.ACTIVE);
+        return this.hotelRepo.save(hotel);
     }
 
     @Override
     public Hotel deactivate(UUID hotelId) {
-        Optional<Hotel> hotel = this.hotelRepo.findById(hotelId);
-        if(hotel.isPresent()){
-            Hotel hotel1 = hotel.get();
-            hotel1.setStatus(EStatus.INACTIVE);
-            return this.hotelRepo.save(hotel1);
-        }else{
-            return null;
-        }
+        Hotel hotel = this.hotelRepo.findById(hotelId)
+                .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
+        hotel.setStatus(EStatus.INACTIVE);
+        return this.hotelRepo.save(hotel);
     }
 }
