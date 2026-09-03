@@ -29,7 +29,17 @@ public class HotelController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findOne(@PathVariable @RequestParam("id")UUID id){
+    public ResponseEntity<?> findOne(@PathVariable("id")UUID id){
         return ResponseEntity.ok(this.hotelService.findOne(id));
+    }
+
+    @PatchMapping("/activate/{id}")
+    public ResponseEntity<?> activate(@PathVariable("id") String id){
+        return ResponseEntity.ok(this.hotelService.activate(UUID.fromString(id)));
+    }
+
+    @PatchMapping("/deactivate/{id}")
+    public ResponseEntity<?> deactivate(@PathVariable("id") String id){
+        return ResponseEntity.ok(this.hotelService.deactivate(UUID.fromString(id)));
     }
 }

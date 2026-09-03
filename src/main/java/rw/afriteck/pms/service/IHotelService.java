@@ -10,4 +10,6 @@ public interface IHotelService {
     public Hotel registerHotel(HotelRequest hotelRequest);
     public List<Hotel> findAll();
     public Hotel findOne(UUID hotelId);
+    public Hotel activate(UUID hotelId);
+    public Hotel deactivate(UUID hotelId);
 }
