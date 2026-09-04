@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import rw.afriteck.pms.enums.EMenuItemType;
 import rw.afriteck.pms.enums.EPackageType;
-import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.enums.ERecordStatus;
 
 import java.util.UUID;
 
@@ -14,7 +14,7 @@ import java.util.UUID;
 public class MenuMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID menuMasterId;
+    private UUID id;
     private String menuItemName;
     private Double unitPrice;
     @Enumerated(EnumType.STRING)
@@ -22,8 +22,9 @@ public class MenuMaster {
     @Enumerated(EnumType.STRING)
     private EPackageType packageType;
     @Enumerated(EnumType.STRING)
-    private EStatus status;
+    private ERecordStatus status;
 
     @ManyToOne
+    @JoinColumn(name = "menu_category_id")
     private MenuCategory menuCategory;
 }

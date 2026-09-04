@@ -1,6 +1,6 @@
 package rw.afriteck.pms.dtos;
 
-import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.enums.ERecordStatus;
 
 import java.util.UUID;
 
@@ -10,6 +10,6 @@ public record HotelBranchResponse(
         String location,
         String contactNumber1,
         String contactNumber2,
-        EStatus status,
+        ERecordStatus status,
         UUID hotelId
 ) {}

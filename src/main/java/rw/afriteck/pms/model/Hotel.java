@@ -2,7 +2,7 @@ package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.enums.ERecordStatus;
 
 import java.util.UUID;
 
@@ -12,12 +12,12 @@ import java.util.UUID;
 public class Hotel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID hotelId;
+    private UUID id;
     private String hotelName;
     private String email;
     private String websiteUrl;
     private String logoUrl;
     private String slogan;
     @Enumerated(EnumType.STRING)
-    private EStatus status;
+    private ERecordStatus status;
 }

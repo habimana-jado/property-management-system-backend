@@ -1,6 +1,6 @@
 package rw.afriteck.pms.enums;
 
-public enum EStatus {
+public enum ERecordStatus {
     ACTIVE,
     INACTIVE
 }

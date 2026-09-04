@@ -1,6 +1,9 @@
 package rw.afriteck.pms.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import rw.afriteck.pms.dtos.CreateHotelBranchRequest;
@@ -14,21 +17,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/hotel-branch")
+@RequestMapping("/api/v1/pms/hotel-branches")
 @RequiredArgsConstructor
 public class HotelBranchController {
     private final IHotelBranchService hotelBranchService;
     private final IRestaurantService restaurantService;
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<HotelBranchResponse> registerHotelBranch(@RequestBody CreateHotelBranchRequest hotelBranchRequest){
         HotelBranchResponse hotelBranch = this.hotelBranchService.create(hotelBranchRequest);
         return ResponseEntity.ok(hotelBranch);
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<List<HotelBranchResponse>> findAll(){
-        return ResponseEntity.ok(this.hotelBranchService.findAll());
+    @GetMapping
+    public ResponseEntity<Page<HotelBranchResponse>> findAll(@PageableDefault(size = 20, sort = "id")Pageable pageable){
+        return ResponseEntity.ok(this.hotelBranchService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -36,17 +39,17 @@ public class HotelBranchController {
         return ResponseEntity.ok(this.hotelBranchService.findOne(id));
     }
 
-    @GetMapping("/{id}/restaurant")
-    public ResponseEntity<List<RestaurantResponse>> findRestaurant(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.restaurantService.findByHotelBranch(id));
+    @GetMapping("/{id}/restaurants")
+    public ResponseEntity<Page<RestaurantResponse>> findRestaurant(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return ResponseEntity.ok(this.restaurantService.findByHotelBranchAndActive(id, pageable));
     }
 
-    @PatchMapping("/activate/{id}")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<HotelBranchResponse> activate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(this.hotelBranchService.activate(id));
     }
 
-    @PatchMapping("/deactivate/{id}")
+    @PatchMapping("/{id}/deactivate")
     public ResponseEntity<HotelBranchResponse> deactivate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(this.hotelBranchService.deactivate(id));
     }

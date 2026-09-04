@@ -1,5 +1,7 @@
 package rw.afriteck.pms.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import rw.afriteck.pms.dtos.CreateRestaurantRequest;
 import rw.afriteck.pms.dtos.RestaurantResponse;
 import rw.afriteck.pms.model.Restaurant;
@@ -8,10 +10,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IRestaurantService {
-    public RestaurantResponse create(CreateRestaurantRequest restaurantRequest);
-    public List<RestaurantResponse> findAll();
-    public RestaurantResponse findOne(UUID restaurantId);
-    public RestaurantResponse activate(UUID restaurantId);
-    public RestaurantResponse deactivate(UUID restaurantId);
-    public List<RestaurantResponse> findByHotelBranch(UUID hotelBranchId);
+    RestaurantResponse create(CreateRestaurantRequest restaurantRequest);
+    Page<RestaurantResponse> findAll(Pageable pageable);
+    RestaurantResponse findOne(UUID restaurantId);
+    RestaurantResponse activate(UUID restaurantId);
+    RestaurantResponse deactivate(UUID restaurantId);
+    Page<RestaurantResponse> findByHotelBranchAndActive(UUID hotelBranchId, Pageable pageable);
 }

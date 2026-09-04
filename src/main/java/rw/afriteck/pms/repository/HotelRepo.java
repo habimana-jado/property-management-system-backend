@@ -5,5 +5,4 @@ import rw.afriteck.pms.model.Hotel;
 
 import java.util.UUID;
 
-public interface HotelRepo extends JpaRepository<Hotel, UUID> {
-}
+public interface HotelRepo extends JpaRepository<Hotel, UUID> {}

@@ -1,6 +1,6 @@
 package rw.afriteck.pms.dtos;
 
-import rw.afriteck.pms.enums.EStatus;
+import rw.afriteck.pms.enums.ERecordStatus;
 
 import java.util.UUID;
 
@@ -10,5 +10,5 @@ public record HotelResponse(
         String websiteUrl,
         String logoUrl,
         String slogan,
-        EStatus status
+        ERecordStatus status
 ) {}

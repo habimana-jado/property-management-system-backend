@@ -11,9 +11,10 @@ import java.util.UUID;
 public class TableBill {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID tableBillId;
+    private UUID id;
     private String billNo;
 
     @ManyToOne
+    @JoinColumn(name = "table_master_id")
     private TableMaster tableMaster;
 }

@@ -11,6 +11,6 @@ import java.util.UUID;
 public class MenuCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID menuCategoryId;
+    private UUID id;
     private String name;
 }
