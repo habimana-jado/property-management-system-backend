@@ -14,6 +14,7 @@ public class Hotel {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID hotelId;
     private String hotelName;
+    private String email;
     private String websiteUrl;
     private String logoUrl;
     private String slogan;

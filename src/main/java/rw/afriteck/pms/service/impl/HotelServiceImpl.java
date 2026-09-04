@@ -1,58 +1,61 @@
 package rw.afriteck.pms.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import rw.afriteck.pms.dtos.HotelRequest;
+import rw.afriteck.pms.dtos.CreateHotelRequest;
+import rw.afriteck.pms.dtos.HotelResponse;
 import rw.afriteck.pms.enums.EStatus;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
+import rw.afriteck.pms.mapper.HotelMapper;
 import rw.afriteck.pms.model.Hotel;
 import rw.afriteck.pms.repository.HotelRepo;
 import rw.afriteck.pms.service.IHotelService;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class HotelServiceImpl implements IHotelService {
     private final HotelRepo hotelRepo;
-    private final ObjectMapper objectMapper;
+    private final HotelMapper hotelMapper;
 
-    public HotelServiceImpl(HotelRepo hotelRepo, ObjectMapper objectMapper){
-        this.hotelRepo = hotelRepo;
-        this.objectMapper = objectMapper;
-    }
     @Override
-    public Hotel registerHotel(HotelRequest hotelRequest) {
-        Hotel hotel = objectMapper.convertValue(hotelRequest, Hotel.class);
+    public HotelResponse create(CreateHotelRequest hotelRequest) {
+        Hotel hotel = hotelMapper.toEntity(hotelRequest);
         hotel.setStatus(EStatus.ACTIVE);
-        return this.hotelRepo.save(hotel);
+        Hotel savedEntity = hotelRepo.save(hotel);
+        return hotelMapper.toResponse(savedEntity);
     }
 
     @Override
-    public List<Hotel> findAll() {
-        return this.hotelRepo.findAll();
+    public List<HotelResponse> findAll() {
+        return hotelRepo.findAll().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public Hotel findOne(UUID hotelId) {
-        return this.hotelRepo.findById(hotelId)
+    public HotelResponse findOne(UUID hotelId) {
+        Hotel hotel = hotelRepo.findById(hotelId)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
+        return hotelMapper.toResponse(hotel);
     }
 
     @Override
-    public Hotel activate(UUID hotelId) {
-        Hotel hotel = this.hotelRepo.findById(hotelId)
+    public HotelResponse activate(UUID hotelId) {
+        Hotel hotel = hotelRepo.findById(hotelId)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
         hotel.setStatus(EStatus.ACTIVE);
-        return this.hotelRepo.save(hotel);
+        Hotel activatedHotel = hotelRepo.save(hotel);
+        return hotelMapper.toResponse(activatedHotel);
     }
 
     @Override
-    public Hotel deactivate(UUID hotelId) {
-        Hotel hotel = this.hotelRepo.findById(hotelId)
+    public HotelResponse deactivate(UUID hotelId) {
+        Hotel hotel = hotelRepo.findById(hotelId)
                 .orElseThrow(()-> new ResourceNotFoundException("Hotel", hotelId));
         hotel.setStatus(EStatus.INACTIVE);
-        return this.hotelRepo.save(hotel);
+        return hotelMapper.toResponse(hotelRepo.save(hotel));
     }
 }

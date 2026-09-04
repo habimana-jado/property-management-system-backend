@@ -1,70 +1,77 @@
 package rw.afriteck.pms.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import rw.afriteck.pms.dtos.RestaurantRequest;
+import rw.afriteck.pms.dtos.CreateRestaurantRequest;
+import rw.afriteck.pms.dtos.RestaurantResponse;
 import rw.afriteck.pms.enums.EStatus;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
+import rw.afriteck.pms.mapper.RestaurantMapper;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.model.Restaurant;
+import rw.afriteck.pms.repository.HotelBranchRepo;
 import rw.afriteck.pms.repository.RestaurantRepo;
 import rw.afriteck.pms.service.IHotelBranchService;
 import rw.afriteck.pms.service.IRestaurantService;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class RestaurantServiceImpl implements IRestaurantService {
     private final RestaurantRepo restaurantRepo;
-    private final ObjectMapper objectMapper;
-    private final IHotelBranchService hotelBranchService;
+    private final RestaurantMapper restaurantMapper;
+    private final HotelBranchRepo hotelBranchRepo;
 
-    public RestaurantServiceImpl(RestaurantRepo restaurantRepo, ObjectMapper objectMapper, IHotelBranchService hotelBranchService){
-        this.restaurantRepo = restaurantRepo;
-        this.objectMapper = objectMapper;
-        this.hotelBranchService = hotelBranchService;
-    }
     @Override
-    public Restaurant registerRestaurant(RestaurantRequest restaurantRequest) {
-        HotelBranch hotelBranch = this.hotelBranchService.findOne(restaurantRequest.hotelBranchId());
-        Restaurant restaurant = this.objectMapper.convertValue(restaurantRequest, Restaurant.class);
+    public RestaurantResponse create(CreateRestaurantRequest request) {
+        HotelBranch hotelBranch = hotelBranchRepo.findById(request.hotelBranchId())
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", request.hotelBranchId()));
+        Restaurant restaurant = this.restaurantMapper.toEntity(request);
         restaurant.setHotelBranch(hotelBranch);
         restaurant.setStatus(EStatus.ACTIVE);
 
-        return this.restaurantRepo.save(restaurant);
+        return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
 
     @Override
-    public List<Restaurant> findAll() {
-        return this.restaurantRepo.findAll();
+    public List<RestaurantResponse> findAll() {
+        return restaurantRepo.findAll()
+                .stream()
+                .map(restaurantMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public Restaurant findOne(UUID restaurantId) {
-        return this.restaurantRepo.findById(restaurantId)
+    public RestaurantResponse findOne(UUID restaurantId) {
+        Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+        return restaurantMapper.toResponse(restaurant);
     }
 
     @Override
-    public Restaurant activate(UUID restaurantId) {
-        Restaurant restaurant = this.restaurantRepo.findById(restaurantId)
+    public RestaurantResponse activate(UUID restaurantId) {
+        Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
         restaurant.setStatus(EStatus.ACTIVE);
-        return this.restaurantRepo.save(restaurant);
+        return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
 
     @Override
-    public Restaurant deactivate(UUID restaurantId) {
-        Restaurant restaurant = this.restaurantRepo.findById(restaurantId)
+    public RestaurantResponse deactivate(UUID restaurantId) {
+        Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
         restaurant.setStatus(EStatus.INACTIVE);
-        return this.restaurantRepo.save(restaurant);
+        return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
 
     @Override
-    public List<Restaurant> findByHotelBranch(UUID hotelBranchId) {
-        return this.restaurantRepo.findByHotelBranchHotelBranchId(hotelBranchId);
+    public List<RestaurantResponse> findByHotelBranch(UUID hotelBranchId) {
+        return restaurantRepo.findByHotelBranchHotelBranchId(hotelBranchId)
+                .stream()
+                .map(restaurantMapper::toResponse)
+                .toList();
     }
 }

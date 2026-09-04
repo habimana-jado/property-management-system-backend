@@ -1,73 +1,79 @@
 package rw.afriteck.pms.service.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import rw.afriteck.pms.dtos.HotelBranchRequest;
+import rw.afriteck.pms.dtos.CreateHotelBranchRequest;
+import rw.afriteck.pms.dtos.HotelBranchResponse;
 import rw.afriteck.pms.enums.EStatus;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
+import rw.afriteck.pms.mapper.HotelBranchMapper;
 import rw.afriteck.pms.model.Hotel;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.repository.HotelBranchRepo;
 import rw.afriteck.pms.repository.HotelRepo;
 import rw.afriteck.pms.service.IHotelBranchService;
-import rw.afriteck.pms.service.IHotelService;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class HotelBranchServiceImpl implements IHotelBranchService {
 
     private final HotelBranchRepo hotelBranchRepo;
-    private final IHotelService hotelService;
-    private final ObjectMapper objectMapper;
-
-    public HotelBranchServiceImpl(HotelBranchRepo hotelBranchRepo, IHotelService hotelService, ObjectMapper objectMapper){
-        this.hotelBranchRepo=hotelBranchRepo;
-        this.hotelService = hotelService;
-        this.objectMapper = objectMapper;
-    }
+    private final HotelRepo hotelRepo;
+    private final HotelBranchMapper hotelBranchMapper;
 
     @Override
-    public HotelBranch registerHotelBranch(HotelBranchRequest hotelBranchRequest) {
-        HotelBranch hotelBranch = this.objectMapper.convertValue(hotelBranchRequest, HotelBranch.class);
-        Hotel hotel = this.hotelService.findOne(hotelBranchRequest.hotelId());
+    public HotelBranchResponse create(CreateHotelBranchRequest request) {
+        Hotel hotel = hotelRepo.findById(request.hotelId())
+                .orElseThrow(()->new ResourceNotFoundException("Hotel", request.hotelId()));
+        HotelBranch hotelBranch = hotelBranchMapper.toEntity(request);
         hotelBranch.setHotel(hotel);
         hotelBranch.setStatus(EStatus.ACTIVE);
-        return this.hotelBranchRepo.save(hotelBranch);
+
+        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
+        return hotelBranchMapper.toResponse(saved);
     }
 
     @Override
-    public List<HotelBranch> findAll() {
-        return this.hotelBranchRepo.findAll();
+    public List<HotelBranchResponse> findAll() {
+        return hotelBranchRepo.findAll()
+                .stream()
+                .map(hotelBranchMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public HotelBranch findOne(UUID hotelBranchId) {
-        return this.hotelBranchRepo.findById(hotelBranchId)
+    public HotelBranchResponse findOne(UUID hotelBranchId) {
+        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
+        return hotelBranchMapper.toResponse(hotelBranch);
     }
 
     @Override
-    public HotelBranch activate(UUID hotelBranchId) {
-        HotelBranch hotelBranch = this.hotelBranchRepo.findById(hotelBranchId)
+    public HotelBranchResponse activate(UUID hotelBranchId) {
+        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
         hotelBranch.setStatus(EStatus.ACTIVE);
-        return this.hotelBranchRepo.save(hotelBranch);
-
+        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
+        return hotelBranchMapper.toResponse(saved);
     }
 
     @Override
-    public HotelBranch deactivate(UUID hotelBranchId) {
-        HotelBranch hotelBranch = this.hotelBranchRepo.findById(hotelBranchId)
+    public HotelBranchResponse deactivate(UUID hotelBranchId) {
+        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
         hotelBranch.setStatus(EStatus.INACTIVE);
-        return this.hotelBranchRepo.save(hotelBranch);
+        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
+        return hotelBranchMapper.toResponse(saved);
     }
 
     @Override
-    public List<HotelBranch> findByHotel(UUID hotelId) {
-        return this.hotelBranchRepo.findByHotelHotelId(hotelId);
+    public List<HotelBranchResponse> findByHotel(UUID hotelId) {
+        return hotelBranchRepo.findByHotelHotelId(hotelId)
+                .stream()
+                .map(hotelBranchMapper::toResponse)
+                .toList();
     }
 }
