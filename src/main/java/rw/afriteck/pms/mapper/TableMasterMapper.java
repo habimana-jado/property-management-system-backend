@@ -9,7 +9,7 @@ import rw.afriteck.pms.model.TableMaster;
 @Mapper(componentModel = "spring")
 public interface TableMasterMapper {
 
-    @Mapping(target = "restaurantId", source = "restaurant.restaurantId")
+    @Mapping(target = "restaurantId", source = "restaurant.id")
     TableMasterResponse toResponse(TableMaster tableMaster);
     TableMaster toEntity(CreateTableMasterRequest tableMasterRequest);
 }

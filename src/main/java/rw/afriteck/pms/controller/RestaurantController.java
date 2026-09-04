@@ -28,7 +28,7 @@ public class RestaurantController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RestaurantResponse>> findAll(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
+    public ResponseEntity<Page<RestaurantResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(this.restaurantService.findAll(pageable));
     }
 

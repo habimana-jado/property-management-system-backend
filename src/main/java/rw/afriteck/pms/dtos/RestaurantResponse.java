@@ -5,7 +5,7 @@ import rw.afriteck.pms.enums.ERecordStatus;
 import java.util.UUID;
 
 public record RestaurantResponse(
-        UUID restaurantId,
+        UUID id,
         String restaurantName,
         String tinNumber,
         ERecordStatus status,

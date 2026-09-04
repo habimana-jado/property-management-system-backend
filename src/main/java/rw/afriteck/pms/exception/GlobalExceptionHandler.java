@@ -7,11 +7,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.nio.file.AccessDeniedException;
 import java.time.Instant;
@@ -112,6 +114,13 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "TYPE_MISMATCH", message, request);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex, HttpServletRequest request) {
+        return build(HttpStatus.NOT_FOUND, "ROUTE_NOT_FOUND",
+                "No handler found for %s %s".formatted(ex.getHttpMethod(), ex.getResourcePath()), request);
+    }
+
     // ---- 404 for unmapped routes (requires the property below) ----
 
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -119,6 +128,20 @@ public class GlobalExceptionHandler {
             NoHandlerFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "ROUTE_NOT_FOUND",
                 "No handler for %s %s".formatted(ex.getHttpMethod(), ex.getRequestURL()), request);
+    }
+
+    // ---- 405 for Endpoint method not supported ----
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+
+        String message = "Request method '%s' is not supported for this endpoint. Supported methods: %s"
+                .formatted(ex.getMethod(), String.join(", ", ex.getSupportedMethods()));
+
+        log.info("Method not allowed on {}: {}", request.getRequestURI(), message);
+
+        return build(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", message, request);
     }
 
     // ---- Data integrity (e.g. DB unique constraint violated) ----

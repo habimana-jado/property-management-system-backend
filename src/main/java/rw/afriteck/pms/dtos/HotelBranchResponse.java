@@ -5,7 +5,7 @@ import rw.afriteck.pms.enums.ERecordStatus;
 import java.util.UUID;
 
 public record HotelBranchResponse(
-        UUID hotelBranchId,
+        UUID id,
         String name,
         String location,
         String contactNumber1,

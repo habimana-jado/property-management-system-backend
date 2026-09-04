@@ -9,7 +9,7 @@ import rw.afriteck.pms.model.HotelBranch;
 @Mapper(componentModel = "spring")
 public interface HotelBranchMapper {
 
-    @Mapping(target = "hotelId", source = "hotel.hotelId")
+    @Mapping(target = "hotelId", source = "hotel.id")
     HotelBranchResponse toResponse(HotelBranch hotelBranch);
     HotelBranch toEntity(CreateHotelBranchRequest hotelBranchRequest);
 }

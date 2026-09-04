@@ -34,6 +34,7 @@ public class TableMasterService implements ITableMasterService {
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", tableMasterRequest.restaurantId()));
         TableMaster tableMaster = tableMasterMapper.toEntity(tableMasterRequest);
         tableMaster.setTableStatus(ETableStatus.AVAILABLE);
+        tableMaster.setRecordStatus(ERecordStatus.ACTIVE);
         tableMaster.setRestaurant(restaurant);
         TableMaster saved = tableMasterRepo.save(tableMaster);
         return tableMasterMapper.toResponse(saved);

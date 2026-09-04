@@ -5,8 +5,9 @@ import rw.afriteck.pms.enums.ERecordStatus;
 import java.util.UUID;
 
 public record HotelResponse(
-        UUID hotelId,
+        UUID id,
         String hotelName,
+        String email,
         String websiteUrl,
         String logoUrl,
         String slogan,

@@ -19,7 +19,7 @@ public class TableMasterController {
     private final ITableMasterService tableMasterService;
 
     @PostMapping
-    public ResponseEntity<TableMasterResponse> register(CreateTableMasterRequest tableMasterRequest){
+    public ResponseEntity<TableMasterResponse> register(@RequestBody CreateTableMasterRequest tableMasterRequest){
         return ResponseEntity.ok(tableMasterService.register(tableMasterRequest));
     }
 
@@ -33,12 +33,12 @@ public class TableMasterController {
         return ResponseEntity.ok(tableMasterService.findOne(id));
     }
 
-    @GetMapping("/{id}/activate")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<TableMasterResponse> activate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(tableMasterService.activate(id));
     }
 
-    @GetMapping("/{id}/deactivate")
+    @PatchMapping("/{id}/deactivate")
     public ResponseEntity<TableMasterResponse> deactivate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(tableMasterService.deactivate(id));
     }

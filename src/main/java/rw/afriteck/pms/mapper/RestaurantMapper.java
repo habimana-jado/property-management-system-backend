@@ -9,7 +9,7 @@ import rw.afriteck.pms.model.Restaurant;
 @Mapper(componentModel = "spring")
 public interface RestaurantMapper {
 
-    @Mapping(target = "hotelBranchId", source = "hotelBranch.hotelBranchId")
+    @Mapping(target = "hotelBranchId", source = "hotelBranch.id")
     RestaurantResponse toResponse(Restaurant restaurant);
     Restaurant toEntity(CreateRestaurantRequest restaurantRequest);
 }
