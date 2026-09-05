@@ -7,15 +7,22 @@ import rw.afriteck.pms.enums.ERecordStatus;
 import java.util.UUID;
 
 @Entity
-@Table(name = "restaurants")
+@Table(name = "restaurants",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_restaurant_hotel_branch_name",
+                columnNames = {"hotel_branch_id", "restaurant_name"}
+        ))
 @Data
 public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(nullable = false)
     private String restaurantName;
+    @Column(nullable = false, unique = true)
     private String tinNumber;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ERecordStatus status;
 
     @ManyToOne

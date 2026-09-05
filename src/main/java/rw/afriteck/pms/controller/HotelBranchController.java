@@ -1,5 +1,6 @@
 package rw.afriteck.pms.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,7 +25,7 @@ public class HotelBranchController {
     private final IRestaurantService restaurantService;
 
     @PostMapping
-    public ResponseEntity<HotelBranchResponse> registerHotelBranch(@RequestBody CreateHotelBranchRequest hotelBranchRequest){
+    public ResponseEntity<HotelBranchResponse> registerHotelBranch(@Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){
         HotelBranchResponse hotelBranch = this.hotelBranchService.create(hotelBranchRequest);
         return ResponseEntity.ok(hotelBranch);
     }

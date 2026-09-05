@@ -8,17 +8,24 @@ import rw.afriteck.pms.enums.ETableStatus;
 import java.util.UUID;
 
 @Entity
-@Table(name = "table_masters")
+@Table(name = "table_masters",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_table_master_restaurant_name",
+                columnNames = {"restaurant_id", "table_number"}
+        ))
 @Data
 public class TableMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(nullable = false)
     private String tableNumber;
     private int tableCapacity;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ETableStatus tableStatus;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ERecordStatus recordStatus;
 
     @ManyToOne

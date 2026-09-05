@@ -1,5 +1,6 @@
 package rw.afriteck.pms.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public class TableMasterController {
     private final ITableMasterService tableMasterService;
 
     @PostMapping
-    public ResponseEntity<TableMasterResponse> register(@RequestBody CreateTableMasterRequest tableMasterRequest){
+    public ResponseEntity<TableMasterResponse> register(@Valid @RequestBody CreateTableMasterRequest tableMasterRequest){
         return ResponseEntity.ok(tableMasterService.register(tableMasterRequest));
     }
 

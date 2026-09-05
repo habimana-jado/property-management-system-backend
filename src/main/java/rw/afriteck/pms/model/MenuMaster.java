@@ -6,6 +6,7 @@ import rw.afriteck.pms.enums.EMenuItemType;
 import rw.afriteck.pms.enums.EPackageType;
 import rw.afriteck.pms.enums.ERecordStatus;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
@@ -15,13 +16,18 @@ public class MenuMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+    @Column(nullable = false)
     private String menuItemName;
-    private Double unitPrice;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal unitPrice;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private EMenuItemType menuItemType;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private EPackageType packageType;
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ERecordStatus status;
 
     @ManyToOne
