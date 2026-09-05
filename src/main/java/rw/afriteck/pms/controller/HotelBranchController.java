@@ -28,7 +28,7 @@ public class HotelBranchController {
 
     @PostMapping
     public ResponseEntity<HotelBranchResponse> registerHotelBranch(@Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){
-        HotelBranchResponse hotelBranch = this.hotelBranchService.create(hotelBranchRequest);
+        HotelBranchResponse hotelBranch = hotelBranchService.create(hotelBranchRequest);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -39,26 +39,26 @@ public class HotelBranchController {
 
     @GetMapping
     public ResponseEntity<Page<HotelBranchResponse>> findAll(@PageableDefault(size = 20, sort = "id")Pageable pageable){
-        return ResponseEntity.ok(this.hotelBranchService.findAll(pageable));
+        return ResponseEntity.ok(hotelBranchService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<HotelBranchResponse> findOne(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.hotelBranchService.findOne(id));
+        return ResponseEntity.ok(hotelBranchService.findOne(id));
     }
 
     @GetMapping("/{id}/restaurants")
     public ResponseEntity<Page<RestaurantResponse>> findRestaurant(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return ResponseEntity.ok(this.restaurantService.findByHotelBranchAndActive(id, pageable));
+        return ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(id, pageable));
     }
 
     @PatchMapping("/{id}/activate")
     public ResponseEntity<HotelBranchResponse> activate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.hotelBranchService.activate(id));
+        return ResponseEntity.ok(hotelBranchService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<HotelBranchResponse> deactivate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.hotelBranchService.deactivate(id));
+        return ResponseEntity.ok(hotelBranchService.deactivate(id));
     }
 }

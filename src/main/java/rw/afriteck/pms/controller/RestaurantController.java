@@ -8,11 +8,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import rw.afriteck.pms.dtos.CreateRestaurantRequest;
-import rw.afriteck.pms.dtos.MenuCategoryResponse;
-import rw.afriteck.pms.dtos.RestaurantResponse;
-import rw.afriteck.pms.dtos.TableMasterResponse;
+import rw.afriteck.pms.dtos.*;
 import rw.afriteck.pms.service.IMenuCategoryService;
+import rw.afriteck.pms.service.IMenuMasterService;
 import rw.afriteck.pms.service.IRestaurantService;
 import rw.afriteck.pms.service.ITableMasterService;
 
@@ -27,6 +25,7 @@ public class RestaurantController {
     private final IRestaurantService restaurantService;
     private final ITableMasterService tableMasterService;
     private final IMenuCategoryService menuCategoryService;
+    private final IMenuMasterService menuMasterService;
 
     @PostMapping
     public ResponseEntity<RestaurantResponse> registerRestaurant(@Valid @RequestBody CreateRestaurantRequest restaurantRequest){
@@ -59,14 +58,19 @@ public class RestaurantController {
         return ResponseEntity.ok(menuCategoryService.findByRestaurant(id, pageable));
     }
 
+    @GetMapping("/{id}/menu-items")
+    public ResponseEntity<Page<MenuMasterResponse>> findMenuItems(@PathVariable UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return ResponseEntity.ok(menuMasterService.findByRestaurantAndActive(id, pageable));
+    }
+
     @PatchMapping("/{id}/activate")
     public ResponseEntity<RestaurantResponse> activate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.restaurantService.activate(id));
+        return ResponseEntity.ok(restaurantService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<RestaurantResponse> deactivate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.restaurantService.deactivate(id));
+        return ResponseEntity.ok(restaurantService.deactivate(id));
     }
 
 }

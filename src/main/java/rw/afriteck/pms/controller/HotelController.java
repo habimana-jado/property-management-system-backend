@@ -28,7 +28,7 @@ public class HotelController {
 
     @PostMapping
     public ResponseEntity<HotelResponse> registerHotel(@Valid @RequestBody CreateHotelRequest hotelRequest){
-        HotelResponse hotel = this.hotelService.create(hotelRequest);
+        HotelResponse hotel = hotelService.create(hotelRequest);
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
                 .path("/{id}")
@@ -39,26 +39,26 @@ public class HotelController {
 
     @GetMapping
     public ResponseEntity<Page<HotelResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return ResponseEntity.ok(this.hotelService.findAll(pageable));
+        return ResponseEntity.ok(hotelService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<HotelResponse> findOne(@PathVariable("id")UUID id){
-        return ResponseEntity.ok(this.hotelService.findOne(id));
+        return ResponseEntity.ok(hotelService.findOne(id));
     }
 
     @GetMapping("/{id}/hotel-branches")
     public ResponseEntity<Page<HotelBranchResponse>> findHotelBranch(@PathVariable("id")UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return ResponseEntity.ok(this.hotelBranchService.findByHotelAndActive(id, pageable));
+        return ResponseEntity.ok(hotelBranchService.findByHotelAndActive(id, pageable));
     }
 
     @PatchMapping("/{id}/activate")
     public ResponseEntity<HotelResponse> activate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.hotelService.activate(id));
+        return ResponseEntity.ok(hotelService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<HotelResponse> deactivate(@PathVariable("id") UUID id){
-        return ResponseEntity.ok(this.hotelService.deactivate(id));
+        return ResponseEntity.ok(hotelService.deactivate(id));
     }
 }
