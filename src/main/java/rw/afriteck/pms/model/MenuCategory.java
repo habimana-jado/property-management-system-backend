@@ -2,9 +2,15 @@ package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "menu_categories",
         uniqueConstraints = @UniqueConstraint(
@@ -12,7 +18,6 @@ import java.util.UUID;
                 columnNames = {"restaurant_id", "name"}
         )
 )
-@Data
 public class MenuCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -2,14 +2,19 @@ package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import rw.afriteck.pms.enums.EBillStatus;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "table_bills")
-@Data
 public class TableBill {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

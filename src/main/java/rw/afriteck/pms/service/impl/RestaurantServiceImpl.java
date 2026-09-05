@@ -26,6 +26,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private final HotelBranchRepo hotelBranchRepo;
 
     @Override
+    @Transactional
     public RestaurantResponse create(CreateRestaurantRequest request) {
         HotelBranch hotelBranch = hotelBranchRepo.findById(request.hotelBranchId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", request.hotelBranchId()));
@@ -37,6 +38,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
     }
 
     @Override
+    @Transactional
     public RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest) {
         HotelBranch hotelBranch = hotelBranchRepo.findById(restaurantRequest.hotelBranchId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", restaurantRequest.hotelBranchId()));

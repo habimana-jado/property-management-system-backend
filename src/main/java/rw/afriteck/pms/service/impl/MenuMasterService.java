@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.dtos.CreateMenuMasterRequest;
 import rw.afriteck.pms.dtos.MenuMasterResponse;
 import rw.afriteck.pms.enums.ERecordStatus;
@@ -26,6 +27,7 @@ public class MenuMasterService implements IMenuMasterService {
     private final MenuCategoryRepo menuCategoryRepo;
 
     @Override
+    @Transactional
     public MenuMasterResponse register(CreateMenuMasterRequest menuMasterRequest) {
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
                 .orElseThrow(()->new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
@@ -37,6 +39,7 @@ public class MenuMasterService implements IMenuMasterService {
     }
 
     @Override
+    @Transactional
     public MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest) {
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
                 .orElseThrow(()->new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
@@ -50,6 +53,7 @@ public class MenuMasterService implements IMenuMasterService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MenuMasterResponse> findAll(Pageable pageable) {
         return menuMasterRepo.findAll(pageable)
                 .map(menuMasterMapper::toResponse);
@@ -61,6 +65,7 @@ public class MenuMasterService implements IMenuMasterService {
     }
 
     @Override
+    @Transactional
     public MenuMasterResponse updateUnitPrice(UUID menuMasterId, BigDecimal unitPrice) {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
                 .orElseThrow(()->new ResourceNotFoundException("Menu Master", menuMasterId));
@@ -70,6 +75,7 @@ public class MenuMasterService implements IMenuMasterService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<MenuMasterResponse> findByRestaurantAndActive(UUID restaurantId, Pageable pageable) {
         return menuMasterRepo.findByMenuCategoryRestaurantId(restaurantId, pageable)
                 .map(menuMasterMapper::toResponse);

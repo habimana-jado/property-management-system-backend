@@ -2,18 +2,23 @@ package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import rw.afriteck.pms.enums.ERecordStatus;
 import rw.afriteck.pms.enums.ETableStatus;
 
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "table_masters",
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_table_master_restaurant_name",
                 columnNames = {"restaurant_id", "table_number"}
         ))
-@Data
 public class TableMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

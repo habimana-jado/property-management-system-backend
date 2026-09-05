@@ -2,6 +2,9 @@ package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import rw.afriteck.pms.enums.EMenuItemType;
 import rw.afriteck.pms.enums.EPackageType;
 import rw.afriteck.pms.enums.ERecordStatus;
@@ -9,9 +12,11 @@ import rw.afriteck.pms.enums.ERecordStatus;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "menu_masters")
-@Data
 public class MenuMaster {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

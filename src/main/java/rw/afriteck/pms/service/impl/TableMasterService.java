@@ -41,6 +41,7 @@ public class TableMasterService implements ITableMasterService {
     }
 
     @Override
+    @Transactional
     public TableMasterResponse update(UUID id, CreateTableMasterRequest tableMasterRequest) {
         TableMaster tableMaster = tableMasterRepo.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Table Master", id));

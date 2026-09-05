@@ -27,6 +27,7 @@ public class HotelBranchServiceImpl implements IHotelBranchService {
     private final HotelBranchMapper hotelBranchMapper;
 
     @Override
+    @Transactional
     public HotelBranchResponse create(CreateHotelBranchRequest request) {
         Hotel hotel = hotelRepo.findById(request.hotelId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel", request.hotelId()));
@@ -39,6 +40,7 @@ public class HotelBranchServiceImpl implements IHotelBranchService {
     }
 
     @Override
+    @Transactional
     public HotelBranchResponse update(UUID id, CreateHotelBranchRequest hotelBranchRequest) {
         Hotel hotel = hotelRepo.findById(hotelBranchRequest.hotelId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel", hotelBranchRequest.hotelId()));
