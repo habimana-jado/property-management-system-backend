@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateRestaurantRequest;
 import rw.afriteck.pms.dtos.MenuCategoryResponse;
 import rw.afriteck.pms.dtos.RestaurantResponse;
@@ -15,6 +16,7 @@ import rw.afriteck.pms.service.IMenuCategoryService;
 import rw.afriteck.pms.service.IRestaurantService;
 import rw.afriteck.pms.service.ITableMasterService;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +30,13 @@ public class RestaurantController {
 
     @PostMapping
     public ResponseEntity<RestaurantResponse> registerRestaurant(@Valid @RequestBody CreateRestaurantRequest restaurantRequest){
-        return ResponseEntity.ok(this.restaurantService.create(restaurantRequest));
+        RestaurantResponse restaurantResponse = this.restaurantService.create(restaurantRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(restaurantResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(restaurantResponse);
     }
 
     @GetMapping

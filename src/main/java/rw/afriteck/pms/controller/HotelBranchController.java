@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateHotelBranchRequest;
 import rw.afriteck.pms.dtos.HotelBranchResponse;
 import rw.afriteck.pms.dtos.RestaurantResponse;
@@ -14,6 +15,7 @@ import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.service.IHotelBranchService;
 import rw.afriteck.pms.service.IRestaurantService;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +29,12 @@ public class HotelBranchController {
     @PostMapping
     public ResponseEntity<HotelBranchResponse> registerHotelBranch(@Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){
         HotelBranchResponse hotelBranch = this.hotelBranchService.create(hotelBranchRequest);
-        return ResponseEntity.ok(hotelBranch);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(hotelBranch.id())
+                .toUri();
+        return ResponseEntity.created(location).body(hotelBranch);
     }
 
     @GetMapping

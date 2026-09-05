@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateHotelRequest;
 import rw.afriteck.pms.dtos.HotelBranchResponse;
 import rw.afriteck.pms.dtos.HotelResponse;
@@ -14,6 +15,7 @@ import rw.afriteck.pms.model.Hotel;
 import rw.afriteck.pms.service.IHotelBranchService;
 import rw.afriteck.pms.service.IHotelService;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +29,12 @@ public class HotelController {
     @PostMapping
     public ResponseEntity<HotelResponse> registerHotel(@Valid @RequestBody CreateHotelRequest hotelRequest){
         HotelResponse hotel = this.hotelService.create(hotelRequest);
-        return ResponseEntity.ok(hotel);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(hotel.id())
+                .toUri();
+        return ResponseEntity.created(location).body(hotel);
     }
 
     @GetMapping

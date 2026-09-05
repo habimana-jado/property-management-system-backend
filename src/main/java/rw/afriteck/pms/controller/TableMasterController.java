@@ -7,10 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateTableMasterRequest;
 import rw.afriteck.pms.dtos.TableMasterResponse;
 import rw.afriteck.pms.service.ITableMasterService;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +23,13 @@ public class TableMasterController {
 
     @PostMapping
     public ResponseEntity<TableMasterResponse> register(@Valid @RequestBody CreateTableMasterRequest tableMasterRequest){
-        return ResponseEntity.ok(tableMasterService.register(tableMasterRequest));
+        TableMasterResponse tableMasterResponse = tableMasterService.register(tableMasterRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(tableMasterResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(tableMasterResponse);
     }
 
     @GetMapping

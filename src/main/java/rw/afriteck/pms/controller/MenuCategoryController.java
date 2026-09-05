@@ -7,10 +7,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateMenuCategoryRequest;
 import rw.afriteck.pms.dtos.MenuCategoryResponse;
 import rw.afriteck.pms.service.IMenuCategoryService;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +23,13 @@ public class MenuCategoryController {
 
     @PostMapping
     public ResponseEntity<MenuCategoryResponse> register(@Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
-        return ResponseEntity.ok(menuCategoryService.register(menuCategoryRequest));
+        MenuCategoryResponse menuCategoryResponse = menuCategoryService.register(menuCategoryRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(menuCategoryResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(menuCategoryResponse);
     }
 
     @GetMapping
