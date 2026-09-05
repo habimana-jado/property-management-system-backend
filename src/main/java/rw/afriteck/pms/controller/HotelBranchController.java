@@ -37,6 +37,17 @@ public class HotelBranchController {
         return ResponseEntity.created(location).body(hotelBranch);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<HotelBranchResponse> updateHotelBranch(@PathVariable("id") UUID id, @Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){
+        HotelBranchResponse hotelBranch = hotelBranchService.update(id, hotelBranchRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(hotelBranch.id())
+                .toUri();
+        return ResponseEntity.created(location).body(hotelBranch);
+    }
+
     @GetMapping
     public ResponseEntity<Page<HotelBranchResponse>> findAll(@PageableDefault(size = 20, sort = "id")Pageable pageable){
         return ResponseEntity.ok(hotelBranchService.findAll(pageable));

@@ -37,6 +37,17 @@ public class HotelController {
         return ResponseEntity.created(location).body(hotel);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<HotelResponse> updateHotel(@PathVariable("id") UUID id, @Valid @RequestBody CreateHotelRequest hotelRequest){
+        HotelResponse hotel = hotelService.update(id, hotelRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(hotel.id())
+                .toUri();
+        return ResponseEntity.created(location).body(hotel);
+    }
+
     @GetMapping
     public ResponseEntity<Page<HotelResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(hotelService.findAll(pageable));

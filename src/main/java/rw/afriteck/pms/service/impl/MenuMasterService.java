@@ -37,6 +37,19 @@ public class MenuMasterService implements IMenuMasterService {
     }
 
     @Override
+    public MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest) {
+        MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
+                .orElseThrow(()->new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
+
+        MenuMaster menuMaster = menuMasterRepo.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Menu Master", id));
+
+        menuMasterMapper.updateEntityFromRequest(menuMasterRequest, menuMaster);
+        menuMaster.setMenuCategory(menuCategory);
+        return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));
+    }
+
+    @Override
     public Page<MenuMasterResponse> findAll(Pageable pageable) {
         return menuMasterRepo.findAll(pageable)
                 .map(menuMasterMapper::toResponse);

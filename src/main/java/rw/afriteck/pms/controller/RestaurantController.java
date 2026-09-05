@@ -38,6 +38,17 @@ public class RestaurantController {
         return ResponseEntity.created(location).body(restaurantResponse);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<RestaurantResponse> updateRestaurant(@PathVariable("id") UUID id, @Valid @RequestBody CreateRestaurantRequest restaurantRequest){
+        RestaurantResponse restaurantResponse = this.restaurantService.update(id, restaurantRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(restaurantResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(restaurantResponse);
+    }
+
     @GetMapping
     public ResponseEntity<Page<RestaurantResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(this.restaurantService.findAll(pageable));

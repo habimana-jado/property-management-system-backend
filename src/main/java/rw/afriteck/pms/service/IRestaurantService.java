@@ -11,9 +11,16 @@ import java.util.UUID;
 
 public interface IRestaurantService {
     RestaurantResponse create(CreateRestaurantRequest restaurantRequest);
+
+    RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest);
+
     Page<RestaurantResponse> findAll(Pageable pageable);
+
     RestaurantResponse findOne(UUID restaurantId);
+
     RestaurantResponse activate(UUID restaurantId);
+
     RestaurantResponse deactivate(UUID restaurantId);
+
     Page<RestaurantResponse> findByHotelBranchAndActive(UUID hotelBranchId, Pageable pageable);
 }

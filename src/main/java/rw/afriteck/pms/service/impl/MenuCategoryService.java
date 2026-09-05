@@ -34,6 +34,18 @@ public class MenuCategoryService implements IMenuCategoryService {
     }
 
     @Override
+    public MenuCategoryResponse update(UUID id, CreateMenuCategoryRequest menuCategoryRequest) {
+        Restaurant restaurant = restaurantRepo.findById(menuCategoryRequest.restaurantId())
+                .orElseThrow(()->new ResourceNotFoundException("Restaurant", menuCategoryRequest.restaurantId()));
+
+        MenuCategory menuCategory = menuCategoryRepo.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Menu Category", id));
+
+        menuCategory.setRestaurant(restaurant);
+        return menuCategoryMapper.toResponse(menuCategoryRepo.save(menuCategory));
+    }
+
+    @Override
     public Page<MenuCategoryResponse> findAll(Pageable pageable) {
         return menuCategoryRepo.findAll(pageable)
                 .map(menuCategoryMapper::toResponse);

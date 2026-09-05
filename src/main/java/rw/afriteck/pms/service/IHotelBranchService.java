@@ -10,10 +10,18 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IHotelBranchService {
+
     HotelBranchResponse create(CreateHotelBranchRequest hotelBranchRequest);
+
+    HotelBranchResponse update(UUID id, CreateHotelBranchRequest hotelBranchRequest);
+
     Page<HotelBranchResponse> findAll(Pageable pageable);
+
     HotelBranchResponse findOne(UUID hotelBranchId);
+
     HotelBranchResponse activate(UUID hotelBranchId);
+
     HotelBranchResponse deactivate(UUID hotelBranchId);
+
     Page<HotelBranchResponse> findByHotelAndActive(UUID hotelId, Pageable pageable);
 }

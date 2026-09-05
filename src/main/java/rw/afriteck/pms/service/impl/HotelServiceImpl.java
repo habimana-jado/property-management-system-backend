@@ -19,6 +19,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class HotelServiceImpl implements IHotelService {
+
     private final HotelRepo hotelRepo;
     private final HotelMapper hotelMapper;
 
@@ -28,6 +29,15 @@ public class HotelServiceImpl implements IHotelService {
         hotel.setStatus(ERecordStatus.ACTIVE);
         Hotel savedEntity = hotelRepo.save(hotel);
         return hotelMapper.toResponse(savedEntity);
+    }
+
+    @Override
+    public HotelResponse update(UUID hotelId, CreateHotelRequest hotelRequest) {
+        Hotel hotel = hotelRepo.findById(hotelId)
+                .orElseThrow(()->new ResourceNotFoundException("Hotel", hotelId));
+
+        hotelMapper.updateEntityFromRequest(hotelRequest, hotel);
+        return hotelMapper.toResponse(hotel);
     }
 
     @Override

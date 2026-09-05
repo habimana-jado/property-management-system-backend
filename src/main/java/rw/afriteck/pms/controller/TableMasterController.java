@@ -32,6 +32,17 @@ public class TableMasterController {
         return ResponseEntity.created(location).body(tableMasterResponse);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<TableMasterResponse> update(@PathVariable("id") UUID id, @Valid @RequestBody CreateTableMasterRequest tableMasterRequest){
+        TableMasterResponse tableMasterResponse = tableMasterService.update(id, tableMasterRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(tableMasterResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(tableMasterResponse);
+    }
+
     @GetMapping
     public ResponseEntity<Page<TableMasterResponse>> findAll(@PageableDefault(size = 20, sort = "id")Pageable pageable){
         return ResponseEntity.ok(tableMasterService.findAll(pageable));

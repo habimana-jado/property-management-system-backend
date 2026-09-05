@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface IMenuMasterService {
     MenuMasterResponse register(CreateMenuMasterRequest menuMasterRequest);
+    MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest);
     Page<MenuMasterResponse> findAll(Pageable pageable);
     MenuMasterResponse findOne(UUID menuMasterId);
     MenuMasterResponse updateUnitPrice(UUID menuMasterId, BigDecimal unitPrice);

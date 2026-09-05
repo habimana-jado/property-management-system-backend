@@ -41,6 +41,19 @@ public class TableMasterService implements ITableMasterService {
     }
 
     @Override
+    public TableMasterResponse update(UUID id, CreateTableMasterRequest tableMasterRequest) {
+        TableMaster tableMaster = tableMasterRepo.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Table Master", id));
+        Restaurant restaurant = restaurantRepo.findById(tableMasterRequest.restaurantId())
+                .orElseThrow(()->new ResourceNotFoundException("Restaurant", tableMasterRequest.restaurantId()));
+
+        tableMasterMapper.updateEntityFromRequest(tableMasterRequest, tableMaster);
+
+        tableMaster.setRestaurant(restaurant);
+        return tableMasterMapper.toResponse(tableMasterRepo.save(tableMaster));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<TableMasterResponse> findAll(Pageable pageable) {
         return tableMasterRepo.findAll(pageable)

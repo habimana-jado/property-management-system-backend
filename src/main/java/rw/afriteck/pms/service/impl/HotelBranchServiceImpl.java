@@ -39,6 +39,20 @@ public class HotelBranchServiceImpl implements IHotelBranchService {
     }
 
     @Override
+    public HotelBranchResponse update(UUID id, CreateHotelBranchRequest hotelBranchRequest) {
+        Hotel hotel = hotelRepo.findById(hotelBranchRequest.hotelId())
+                .orElseThrow(()->new ResourceNotFoundException("Hotel", hotelBranchRequest.hotelId()));
+
+        HotelBranch hotelBranch = hotelBranchRepo.findById(id)
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", id));
+
+        hotelBranchMapper.updateEntityFromRequest(hotelBranchRequest, hotelBranch);
+
+        hotelBranch.setHotel(hotel);
+        return hotelBranchMapper.toResponse(hotelBranchRepo.save(hotelBranch));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<HotelBranchResponse> findAll(Pageable pageable) {
         return hotelBranchRepo.findAll(pageable)

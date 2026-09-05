@@ -9,7 +9,12 @@ import java.util.UUID;
 
 public interface IMenuCategoryService {
     MenuCategoryResponse register(CreateMenuCategoryRequest menuCategoryRequest);
+
+    MenuCategoryResponse update(UUID id, CreateMenuCategoryRequest menuCategoryRequest);
+
     Page<MenuCategoryResponse> findAll(Pageable pageable);
+
     MenuCategoryResponse findOne(UUID id);
+
     Page<MenuCategoryResponse> findByRestaurant(UUID restaurantId, Pageable pageable);
 }

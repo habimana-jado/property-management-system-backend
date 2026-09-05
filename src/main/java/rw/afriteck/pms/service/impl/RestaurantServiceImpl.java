@@ -37,6 +37,20 @@ public class RestaurantServiceImpl implements IRestaurantService {
     }
 
     @Override
+    public RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest) {
+        HotelBranch hotelBranch = hotelBranchRepo.findById(restaurantRequest.hotelBranchId())
+                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", restaurantRequest.hotelBranchId()));
+
+        Restaurant restaurant = restaurantRepo.findById(id)
+                        .orElseThrow(()->new ResourceNotFoundException("Restaurant", id));
+
+        restaurantMapper.updateEntityFromRequest(restaurantRequest, restaurant);
+
+        restaurant.setHotelBranch(hotelBranch);
+        return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Page<RestaurantResponse> findAll(Pageable pageable) {
         return restaurantRepo.findAll(pageable)

@@ -32,6 +32,17 @@ public class MenuCategoryController {
         return ResponseEntity.created(location).body(menuCategoryResponse);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<MenuCategoryResponse> update(@PathVariable("id") UUID id, @Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
+        MenuCategoryResponse menuCategoryResponse = menuCategoryService.update(id, menuCategoryRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(menuCategoryResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(menuCategoryResponse);
+    }
+
     @GetMapping
     public ResponseEntity<Page<MenuCategoryResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(menuCategoryService.findAll(pageable));

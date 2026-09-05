@@ -10,9 +10,16 @@ import java.util.List;
 import java.util.UUID;
 
 public interface IHotelService {
+
     HotelResponse create(CreateHotelRequest hotelRequest);
+
+    HotelResponse update(UUID hotelId, CreateHotelRequest hotelRequest);
+
     Page<HotelResponse> findAll(Pageable pageable);
+
     HotelResponse findOne(UUID hotelId);
+
     HotelResponse activate(UUID hotelId);
+
     HotelResponse deactivate(UUID hotelId);
 }
