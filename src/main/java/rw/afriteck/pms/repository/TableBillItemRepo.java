@@ -6,10 +6,13 @@ import org.springframework.data.repository.query.Param;
 import rw.afriteck.pms.model.TableBillItem;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public interface TableBillItemRepo extends JpaRepository<TableBillItem, UUID> {
 
     @Query("SELECT COALESCE(SUM(i.lineTotal), 0) FROM TableBillItem i WHERE i.tableBill.id = :billId")
     BigDecimal sumLineTotalsByBillId(@Param("billId") UUID billId);
+
+    List<TableBillItem> findByTableBillId(UUID tableBillId);
 }

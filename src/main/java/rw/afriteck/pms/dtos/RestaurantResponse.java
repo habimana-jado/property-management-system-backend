@@ -8,6 +8,7 @@ public record RestaurantResponse(
         UUID id,
         String restaurantName,
         String tinNumber,
+        String restaurantCode,
         ERecordStatus status,
         UUID hotelBranchId
 ) {}

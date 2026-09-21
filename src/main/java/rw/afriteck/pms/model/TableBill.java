@@ -1,7 +1,6 @@
 package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,7 +23,7 @@ public class TableBill {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EBillStatus status;
+    private EBillStatus billStatus;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal subtotal;

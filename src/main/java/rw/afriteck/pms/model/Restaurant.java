@@ -14,10 +14,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "restaurants",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_restaurant_hotel_branch_name",
-                columnNames = {"hotel_branch_id", "restaurant_name"}
-        ))
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_restaurant_hotel_branch_name",
+                        columnNames = {"hotel_branch_id", "restaurant_name"}
+                )
+        }
+)
 public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -26,6 +29,8 @@ public class Restaurant {
     private String restaurantName;
     @Column(nullable = false, unique = true)
     private String tinNumber;
+    @Column(nullable = false, unique = true, length = 6)
+    private String restaurantCode;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ERecordStatus status;

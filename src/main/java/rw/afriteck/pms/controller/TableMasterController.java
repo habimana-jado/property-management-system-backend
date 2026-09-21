@@ -9,11 +9,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import rw.afriteck.pms.dtos.CreateTableMasterRequest;
-import rw.afriteck.pms.dtos.PlaceOrderRequest;
-import rw.afriteck.pms.dtos.TableBillItemResponse;
-import rw.afriteck.pms.dtos.TableMasterResponse;
+import rw.afriteck.pms.dtos.*;
+import rw.afriteck.pms.mapper.BillSnapshotMapper;
 import rw.afriteck.pms.service.IOrderService;
+import rw.afriteck.pms.service.ITableBillService;
 import rw.afriteck.pms.service.ITableMasterService;
 
 import java.net.URI;
@@ -25,12 +24,19 @@ import java.util.UUID;
 public class TableMasterController {
     private final ITableMasterService tableMasterService;
     private final IOrderService orderService;
+    private final ITableBillService tableBillService;
 
     @PostMapping("/{tableId}/orders")
     public ResponseEntity<TableBillItemResponse> placeOrder(
             @PathVariable UUID tableId,
             @Valid @RequestBody PlaceOrderRequest request) {
         TableBillItemResponse response = orderService.placeOrder(tableId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{tableId}/bills")
+    public ResponseEntity<BillSnapshotResponse> requestBill(@PathVariable UUID tableId) {
+        BillSnapshotResponse response = tableBillService.requestBill(tableId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

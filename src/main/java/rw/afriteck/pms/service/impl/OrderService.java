@@ -22,6 +22,7 @@ import rw.afriteck.pms.repository.TableMasterRepo;
 import rw.afriteck.pms.service.IOrderService;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -33,6 +34,9 @@ public class OrderService implements IOrderService {
     private final TableBillItemRepo tableBillItemRepo;
     private final MenuMasterRepo menuMasterRepo;
     private final TableBillItemMapper tableBillItemMapper;
+    private final BillNumberGeneratorService billNumberGeneratorService;
+    private static final List<EBillStatus> ACTIVE_BILL_STATUSES =
+            List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED);
 
     @Override
     @Transactional
@@ -47,10 +51,9 @@ public class OrderService implements IOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Item", tableBillItemRequest.menuItemId()));
 
         // Check if 1st Table Order then branch to openNewBill else retrieve existing tableBill Object
-        TableBill bill = tableBillRepo.findByTableMasterIdAndStatus(tableId, EBillStatus.OPEN)
-                .orElseGet(() -> openNewBill(table));
+        TableBill bill = retrieveOrCreateActiveBill(table);
 
-        // Create the line item — same code path regardless of whether bill was just created or already existed
+
         TableBillItem item = new TableBillItem();
         item.setTableBill(bill);
         item.setMenuMaster(menuItem);
@@ -73,19 +76,42 @@ public class OrderService implements IOrderService {
         if (table.getRecordStatus() == ERecordStatus.INACTIVE) {
             throw new InvalidStateException("Table %s is inactive".formatted(table.getId()));
         }
-        //No new orders can be placed on an open bill unless cleared first
-        if (table.getTableStatus() == ETableStatus.BILLED) {
-            throw new InvalidStateException(
-                    "Table %s is currently billed and awaiting payment — cannot add new orders"
-                            .formatted(table.getId()));
+    }
+
+    private TableBill retrieveOrCreateActiveBill(TableMaster table){
+
+        TableBill bill = tableBillRepo.findActiveBillByTableId(table.getId(), ACTIVE_BILL_STATUSES)
+                .orElseGet(() -> openNewBill(table));
+
+        if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
+            bill.setBillStatus(EBillStatus.OPEN); // snapshot invalidated — new item is coming
         }
 
+        if(table.getTableStatus().equals(ETableStatus.BILLED)){
+            table.setTableStatus(ETableStatus.OCCUPIED);
+            tableRepo.save(table);
+        }
+
+        // Check if Table had Requested Bill and has decided to continue ordering on the same Bill
+        if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
+            bill.setBillStatus(EBillStatus.OPEN);
+
+            return tableBillRepo.save(bill);
+        }
+
+        if(table.getTableStatus().equals(ETableStatus.BILLED)){
+            table.setTableStatus(ETableStatus.OCCUPIED);
+            tableRepo.save(table);
+        }
+
+        return bill;
     }
 
     private TableBill openNewBill(TableMaster table) {
         TableBill bill = new TableBill();
         bill.setTableMaster(table);
-        bill.setStatus(EBillStatus.OPEN);
+        bill.setBillNo(billNumberGeneratorService.generateBillNo(table.getRestaurant().getId(), table.getRestaurant().getRestaurantCode()));
+        bill.setBillStatus(EBillStatus.OPEN);
         bill.setSubtotal(BigDecimal.ZERO);
         //TODO: Replace with real Tax values and Discount implementation
         bill.setTaxAmount(BigDecimal.ZERO);

@@ -8,10 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.dtos.CreateRestaurantRequest;
 import rw.afriteck.pms.dtos.RestaurantResponse;
 import rw.afriteck.pms.enums.ERecordStatus;
+import rw.afriteck.pms.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
 import rw.afriteck.pms.mapper.RestaurantMapper;
+import rw.afriteck.pms.model.BillNumberCounter;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.model.Restaurant;
+import rw.afriteck.pms.repository.BillNumberCounterRepo;
 import rw.afriteck.pms.repository.HotelBranchRepo;
 import rw.afriteck.pms.repository.RestaurantRepo;
 import rw.afriteck.pms.service.IRestaurantService;
@@ -24,6 +27,7 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private final RestaurantRepo restaurantRepo;
     private final RestaurantMapper restaurantMapper;
     private final HotelBranchRepo hotelBranchRepo;
+    private final BillNumberCounterRepo billNumberCounterRepo;
 
     @Override
     @Transactional
@@ -34,12 +38,23 @@ public class RestaurantServiceImpl implements IRestaurantService {
         restaurant.setHotelBranch(hotelBranch);
         restaurant.setStatus(ERecordStatus.ACTIVE);
 
-        return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
+        Restaurant response = restaurantRepo.save(restaurant);
+
+        BillNumberCounter counter = new BillNumberCounter();
+        counter.setRestaurantId(response.getId());
+        counter.setLastNumber(0L);
+        billNumberCounterRepo.save(counter);
+
+        return restaurantMapper.toResponse(response);
     }
 
     @Override
     @Transactional
     public RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest) {
+        if (restaurantRequest.restaurantCode() != null) {
+            throw new BusinessRuleViolationException("RESTAURANT_CODE_PATCH", "Restaurant code cannot be changed after creation");
+        }
+
         HotelBranch hotelBranch = hotelBranchRepo.findById(restaurantRequest.hotelBranchId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", restaurantRequest.hotelBranchId()));
 
