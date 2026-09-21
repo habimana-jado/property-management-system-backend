@@ -34,6 +34,11 @@ public class TableBill {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "merged_into_bill_id")
+    private UUID mergedIntoBillId;
+    @Column(name = "split_from_bill_id")
+    private UUID splitFromBillId;
+
     @ManyToOne
     @JoinColumn(name = "table_master_id")
     private TableMaster tableMaster;

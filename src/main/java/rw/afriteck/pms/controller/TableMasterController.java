@@ -53,6 +53,14 @@ public class TableMasterController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/{targetTableId}/merge")
+    public ResponseEntity<TableBillResponse> mergeTable(
+            @PathVariable("targetTableId") UUID tableId,
+            @Valid @RequestBody MergeTableRequest request) {
+        TableBillResponse response = orderService.mergeTable(tableId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
     @PostMapping
     public ResponseEntity<TableMasterResponse> register(@Valid @RequestBody CreateTableMasterRequest tableMasterRequest) {
         TableMasterResponse tableMasterResponse = tableMasterService.register(tableMasterRequest);

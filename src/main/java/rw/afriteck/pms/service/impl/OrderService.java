@@ -3,10 +3,7 @@ package rw.afriteck.pms.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import rw.afriteck.pms.dtos.PlaceOrderRequest;
-import rw.afriteck.pms.dtos.SplitTableRequest;
-import rw.afriteck.pms.dtos.TableBillItemResponse;
-import rw.afriteck.pms.dtos.TableSplitResponse;
+import rw.afriteck.pms.dtos.*;
 import rw.afriteck.pms.enums.EBillStatus;
 import rw.afriteck.pms.enums.ERecordStatus;
 import rw.afriteck.pms.enums.ETableStatus;
@@ -118,6 +115,7 @@ public class OrderService implements IOrderService {
 
         // Create the new bill for the target table
         TableBill newBill = openNewBill(targetTable);
+        newBill.setSplitFromBillId(sourceBill.getId());
 
         // Reparent the selected items
         for (TableBillItem item : itemsToMove) {
@@ -137,6 +135,64 @@ public class OrderService implements IOrderService {
                 tableBillResponseMapper.toTableBillResponse(sourceBill, sourceTable, itemsRemaining),
                 tableBillResponseMapper.toTableBillResponse(newBill, targetTable, itemsToMove)
         );
+    }
+
+    @Override
+    @Transactional
+    public TableBillResponse mergeTable(UUID destinationTableId, MergeTableRequest request) {
+
+        TableMaster destinationTable = tableMasterRepo.findById(destinationTableId)
+                .orElseThrow(() -> new ResourceNotFoundException("Target Table",destinationTableId));
+
+        TableMaster sourceTable = tableMasterRepo.findById(request.sourceTableId())
+                .orElseThrow(() -> new ResourceNotFoundException("Source Table",request.sourceTableId()));
+
+        if (destinationTable.getId().equals(sourceTable.getId())) {
+            throw new BusinessRuleViolationException("TABLE CONFLICT","Cannot merge a table into itself");
+        }
+        if (!destinationTable.getRestaurant().getId().equals(sourceTable.getRestaurant().getId())) {
+            throw new BusinessRuleViolationException("TABLE CONFLICT","Cannot merge across different restaurants");
+        }
+
+        TableBill destinationBill = tableBillRepo
+                .findActiveBillByTableId(destinationTableId, List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED))
+                .orElseThrow(() -> new ResourceNotFoundException("Bill",destinationTableId));
+
+        TableBill sourceBill = tableBillRepo
+                .findActiveBillByTableId(sourceTable.getId(), List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED))
+                .orElseThrow(() -> new ResourceNotFoundException("Bill", sourceTable.getId()));
+
+        List<TableBillItem> sourceItems = tableBillItemRepo.findByTableBillId(sourceBill.getId());
+        if (sourceItems.isEmpty()) {
+            throw new BusinessRuleViolationException("Source Items", "Source table has no items to merge");
+        }
+
+        List<TableBillItem> destinationExistingItems = tableBillItemRepo.findByTableBillId(destinationBill.getId());
+
+        // reparent all source items onto the destination bill
+        for (TableBillItem item : sourceItems) {
+            item.setTableBill(destinationBill);
+        }
+
+        // recompute destination totals against its full item set (existing + merged)
+        List<TableBillItem> destinationItems = new ArrayList<>(destinationExistingItems);
+
+        destinationItems.addAll(sourceItems); // in-memory union, no extra query
+        recalculateBillTotals(destinationBill);
+
+        // revert stale snapshot if destination had already been requested
+        if (destinationBill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
+            destinationBill.setBillStatus(EBillStatus.OPEN);
+        }
+
+        // close out the source bill
+        sourceBill.setBillStatus(EBillStatus.CANCELLED);
+        sourceBill.setMergedIntoBillId(destinationBill.getId());
+
+        // free up the source table
+        sourceTable.setTableStatus(ETableStatus.AVAILABLE);
+
+        return tableBillResponseMapper.toTableBillResponse(destinationBill, destinationTable, destinationItems);
     }
 
     // OCCUPIED or AVAILABLE are both fine to accept orders — one opens a new bill,
