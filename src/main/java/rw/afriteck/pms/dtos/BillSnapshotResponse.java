@@ -18,8 +18,8 @@ public record BillSnapshotResponse(
         //Table Details
         String tableNumber,
 
-        //Table Bill Item Details
-        List<TableBillItemSummary> tableBillItems
+        //Table Bill Items Combined
+        List<CombinedBillLineResponse> tableBillItemsCombined
 
 ) {
 }

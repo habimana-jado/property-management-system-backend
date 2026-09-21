@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.*;
-import rw.afriteck.pms.mapper.BillSnapshotMapper;
 import rw.afriteck.pms.service.IOrderService;
 import rw.afriteck.pms.service.ITableBillService;
 import rw.afriteck.pms.service.ITableMasterService;
@@ -35,8 +34,22 @@ public class TableMasterController {
     }
 
     @GetMapping("/{tableId}/bills")
-    public ResponseEntity<BillSnapshotResponse> requestBill(@PathVariable UUID tableId) {
-        BillSnapshotResponse response = tableBillService.requestBill(tableId);
+    public ResponseEntity<TableBillResponse> requestBill(@PathVariable UUID tableId) {
+        TableBillResponse response = tableBillService.requestBill(tableId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{tableId}/request-bill")
+    public ResponseEntity<BillSnapshotResponse> requestBillCombined(@PathVariable UUID tableId) {
+        BillSnapshotResponse response = tableBillService.requestBillItemsCombined(tableId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping("/{sourceTableId}/split")
+    public ResponseEntity<TableSplitResponse> splitTable(
+            @PathVariable("sourceTableId") UUID tableId,
+            @Valid @RequestBody SplitTableRequest request) {
+        TableSplitResponse response = orderService.splitTable(tableId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

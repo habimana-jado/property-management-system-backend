@@ -15,4 +15,6 @@ public interface TableBillItemRepo extends JpaRepository<TableBillItem, UUID> {
     BigDecimal sumLineTotalsByBillId(@Param("billId") UUID billId);
 
     List<TableBillItem> findByTableBillId(UUID tableBillId);
+
+    long countByTableBillId(UUID tableBillId);
 }

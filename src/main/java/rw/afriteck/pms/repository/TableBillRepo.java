@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.afriteck.pms.enums.EBillStatus;
 import rw.afriteck.pms.model.TableBill;
+import rw.afriteck.pms.model.TableBillItem;
 
 import java.util.List;
 import java.util.Optional;

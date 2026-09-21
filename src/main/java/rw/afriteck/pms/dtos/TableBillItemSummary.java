@@ -1,9 +1,10 @@
 package rw.afriteck.pms.dtos;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 public record TableBillItemSummary(
-        //Order Details
+        UUID id,
         String menuItemName,
         Integer transactionQuantity,
         BigDecimal unitPriceAtOrderTime,
