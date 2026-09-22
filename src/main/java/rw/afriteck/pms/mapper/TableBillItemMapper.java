@@ -4,7 +4,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import rw.afriteck.pms.dtos.TableBillItemResponse;
 import rw.afriteck.pms.dtos.TableBillItemSummary;
+import rw.afriteck.pms.model.TableBill;
 import rw.afriteck.pms.model.TableBillItem;
+import rw.afriteck.pms.model.TableMaster;
 
 import java.util.List;
 
@@ -18,4 +20,5 @@ public interface TableBillItemMapper {
     TableBillItemSummary toSummary(TableBillItem item);
 
     List<TableBillItemSummary> toSummaryList(List<TableBillItem> items);
+
 }

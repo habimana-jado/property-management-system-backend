@@ -10,6 +10,7 @@ import rw.afriteck.pms.enums.ETableStatus;
 import rw.afriteck.pms.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.exception.InvalidStateException;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
+import rw.afriteck.pms.mapper.OrderMapper;
 import rw.afriteck.pms.mapper.TableBillResponseMapper;
 import rw.afriteck.pms.mapper.TableBillItemMapper;
 import rw.afriteck.pms.model.MenuMaster;
@@ -25,6 +26,7 @@ import rw.afriteck.pms.service.IOrderService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,36 +42,49 @@ public class OrderService implements IOrderService {
     private static final List<EBillStatus> ACTIVE_BILL_STATUSES =
             List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED);
     private final TableBillResponseMapper tableBillResponseMapper;
+    private final OrderMapper orderMapper;
 
     @Override
     @Transactional
-    public TableBillItemResponse placeOrder(UUID tableId, PlaceOrderRequest tableBillItemRequest) {
+    public OrderPlacementResponse placeOrder(UUID tableId, PlaceOrderRequest orderRequest) {
 
         TableMaster table = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table", tableId));
 
         validateTableCanAcceptOrder(table);
 
-        MenuMaster menuItem = menuMasterRepo.findById(tableBillItemRequest.menuItemId())
-                .orElseThrow(() -> new ResourceNotFoundException("Menu Item", tableBillItemRequest.menuItemId()));
+        List<UUID> menuItemIds = orderRequest.orderLineRequests().stream()
+                .map(OrderLineRequest::menuItemId)
+                .distinct()
+                .toList();
+        Map<UUID, MenuMaster> menuItems = menuMasterRepo.findAllById(menuItemIds).stream()
+                .collect(Collectors.toMap(MenuMaster::getId, Function.identity()));
+
+        if (menuItems.size() != menuItemIds.size()) {
+            throw new BusinessRuleViolationException("INVALID ITEM_ID","One or more menu items not found");
+        }
 
         // Check if 1st Table Order then branch to openNewBill else retrieve existing tableBill Object
         TableBill bill = retrieveOrCreateActiveBill(table);
 
+        List<TableBillItem> newItems = orderRequest.orderLineRequests().stream()
+                .map(line -> {
+                    MenuMaster menuItem = menuItems.get(line.menuItemId());
+                    TableBillItem item = new TableBillItem();
+                    item.setTableBill(bill);
+                    item.setMenuMaster(menuItem);
+                    item.setTransactionQuantity(line.transactionQuantity());
+                    item.setUnitPriceAtOrderTime(menuItem.getUnitPrice());
+                    item.setLineTotal(menuItem.getUnitPrice().multiply(BigDecimal.valueOf(line.transactionQuantity())));
+                    return item;
+                })
+                .toList();
+        tableBillItemRepo.saveAll(newItems);
 
-        TableBillItem item = new TableBillItem();
-        item.setTableBill(bill);
-        item.setMenuMaster(menuItem);
-        item.setTransactionQuantity(tableBillItemRequest.transactionQuantity());
-        item.setRemarks(tableBillItemRequest.remarks());
-        item.setUnitPriceAtOrderTime(menuItem.getUnitPrice());
-        item.setLineTotal(menuItem.getUnitPrice().multiply(BigDecimal.valueOf(tableBillItemRequest.transactionQuantity())));
+        List<TableBillItem> allItems = tableBillItemRepo.findByTableBillId(bill.getId());
+        recalculateTotalsFromItems(bill, allItems);
 
-        TableBillItem savedItem = tableBillItemRepo.save(item);
-
-        recalculateBillTotals(bill);
-
-        return tableBillItemMapper.toResponse(savedItem);
+        return orderMapper.toPlacementResponse(bill, table, newItems);
     }
 
     @Override

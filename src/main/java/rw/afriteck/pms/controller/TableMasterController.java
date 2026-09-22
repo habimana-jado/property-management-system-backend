@@ -26,10 +26,10 @@ public class TableMasterController {
     private final ITableBillService tableBillService;
 
     @PostMapping("/{tableId}/orders")
-    public ResponseEntity<TableBillItemResponse> placeOrder(
+    public ResponseEntity<OrderPlacementResponse> placeOrder(
             @PathVariable UUID tableId,
             @Valid @RequestBody PlaceOrderRequest request) {
-        TableBillItemResponse response = orderService.placeOrder(tableId, request);
+        OrderPlacementResponse response = orderService.placeOrder(tableId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

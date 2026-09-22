@@ -1,13 +1,10 @@
 package rw.afriteck.pms.dtos;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.NotEmpty;
 
-import java.util.UUID;
+import java.util.List;
 
 public record PlaceOrderRequest(
-        @NotNull UUID menuItemId,
-        @NotNull @Positive Integer transactionQuantity,
-        String remarks
+        @NotEmpty List<OrderLineRequest> orderLineRequests
 ) {
 }
