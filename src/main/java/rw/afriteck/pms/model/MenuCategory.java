@@ -24,6 +24,7 @@ public class MenuCategory {
     private UUID id;
     @Column(nullable = false)
     private String name;
+    private Integer displayOrder; // for consistent, business-controlled ordering
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")

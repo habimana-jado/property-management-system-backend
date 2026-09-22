@@ -3,6 +3,7 @@ package rw.afriteck.pms.service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import rw.afriteck.pms.dtos.CreateRestaurantRequest;
+import rw.afriteck.pms.dtos.MenuItemsByCategoryResponse;
 import rw.afriteck.pms.dtos.RestaurantResponse;
 import rw.afriteck.pms.model.Restaurant;
 
@@ -17,6 +18,8 @@ public interface IRestaurantService {
     Page<RestaurantResponse> findAll(Pageable pageable);
 
     RestaurantResponse findOne(UUID restaurantId);
+
+    List<MenuItemsByCategoryResponse> searchMenuItemsGrouped(UUID restaurantId, String keyword);
 
     RestaurantResponse activate(UUID restaurantId);
 

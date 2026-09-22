@@ -6,20 +6,24 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.dtos.CreateRestaurantRequest;
+import rw.afriteck.pms.dtos.MenuItemsByCategoryResponse;
 import rw.afriteck.pms.dtos.RestaurantResponse;
 import rw.afriteck.pms.enums.ERecordStatus;
 import rw.afriteck.pms.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
+import rw.afriteck.pms.mapper.MenuMasterMapper;
 import rw.afriteck.pms.mapper.RestaurantMapper;
-import rw.afriteck.pms.model.BillNumberCounter;
-import rw.afriteck.pms.model.HotelBranch;
-import rw.afriteck.pms.model.Restaurant;
+import rw.afriteck.pms.model.*;
 import rw.afriteck.pms.repository.BillNumberCounterRepo;
 import rw.afriteck.pms.repository.HotelBranchRepo;
+import rw.afriteck.pms.repository.MenuMasterRepo;
 import rw.afriteck.pms.repository.RestaurantRepo;
 import rw.afriteck.pms.service.IRestaurantService;
 
-import java.util.UUID;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +32,8 @@ public class RestaurantServiceImpl implements IRestaurantService {
     private final RestaurantMapper restaurantMapper;
     private final HotelBranchRepo hotelBranchRepo;
     private final BillNumberCounterRepo billNumberCounterRepo;
+    private final MenuMasterRepo menuMasterRepo;
+    private final MenuMasterMapper menuMasterMapper;
 
     @Override
     @Transactional
@@ -81,6 +87,28 @@ public class RestaurantServiceImpl implements IRestaurantService {
         return restaurantMapper.toResponse(restaurant);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MenuItemsByCategoryResponse> searchMenuItemsGrouped(UUID restaurantId, String keyword) {
+        List<MenuMaster> results = (keyword == null || keyword.isBlank())
+                ? menuMasterRepo.findAllActiveByRestaurant(restaurantId)
+                : menuMasterRepo.searchActiveByRestaurantAndKeyword(restaurantId, keyword.trim());
+
+        Map<MenuCategory, List<MenuMaster>> grouped = results.stream()
+                .collect(Collectors.groupingBy(
+                        MenuMaster::getMenuCategory,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        return grouped.entrySet().stream()
+                .sorted(Comparator.comparing(e -> e.getKey().getDisplayOrder()))
+                .map(e -> new MenuItemsByCategoryResponse(
+                        e.getKey().getName(),
+                        e.getValue().stream().map(menuMasterMapper::toSearchResponse).toList()
+                ))
+                .toList();
+    }
     @Override
     public RestaurantResponse activate(UUID restaurantId) {
         Restaurant restaurant = restaurantRepo.findById(restaurantId)

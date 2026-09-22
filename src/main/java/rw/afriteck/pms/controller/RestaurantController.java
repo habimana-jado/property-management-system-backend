@@ -74,6 +74,11 @@ public class RestaurantController {
         return ResponseEntity.ok(menuMasterService.findByRestaurantAndActive(id, pageable));
     }
 
+    @GetMapping("/{restaurantId}/menu-items/search")
+    public ResponseEntity<List<MenuItemsByCategoryResponse>> search(@PathVariable UUID restaurantId, @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(restaurantService.searchMenuItemsGrouped(restaurantId, keyword));
+    }
+
     @PatchMapping("/{id}/activate")
     public ResponseEntity<RestaurantResponse> activate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(restaurantService.activate(id));
