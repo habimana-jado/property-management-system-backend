@@ -7,6 +7,7 @@ import lombok.Setter;
 import rw.afriteck.pms.enums.EBillStatus;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -38,6 +39,15 @@ public class TableBill {
     private UUID mergedIntoBillId;
     @Column(name = "split_from_bill_id")
     private UUID splitFromBillId;
+
+    @Column(name = "comp_reason")
+    private String compReason;
+
+    @Column(name = "comp_authorized_by")
+    private String compAuthorizedBy; // TODO: swap for a Staff FK once there's staff auth
+
+    @Column(name = "comped_at")
+    private Instant compedAt;
 
     @ManyToOne
     @JoinColumn(name = "table_master_id")

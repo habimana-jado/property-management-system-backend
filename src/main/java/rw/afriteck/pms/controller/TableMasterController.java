@@ -33,14 +33,6 @@ public class TableMasterController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/orders/{itemId}/void")
-    public ResponseEntity<TableBillResponse> voidItemOrder(
-            @PathVariable UUID itemId,
-            @Valid @RequestBody VoidItemRequest request) {
-        TableBillResponse response = orderService.voidItem(itemId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
     @GetMapping("/{tableId}/bills")
     public ResponseEntity<TableBillResponse> requestBill(@PathVariable UUID tableId) {
         TableBillResponse response = tableBillService.requestBill(tableId);
