@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.enums.ERecordStatus;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -34,6 +35,7 @@ public class Restaurant {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ERecordStatus status;
+    private BigDecimal taxRate;
 
     @ManyToOne
     @JoinColumn(name = "hotel_branch_id")

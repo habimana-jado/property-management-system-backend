@@ -23,6 +23,7 @@ import rw.afriteck.pms.repository.TableMasterRepo;
 import rw.afriteck.pms.service.IOrderService;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -123,8 +124,8 @@ public class OrderService implements IOrderService {
         }
 
         // Recalculate totals on both bills
-        this.recalculateBillTotals(sourceBill);
-        this.recalculateBillTotals(newBill);
+        recalculateTotalsFromItems(sourceBill, itemsRemaining);
+        recalculateTotalsFromItems(newBill, itemsToMove);
 
         // Revert stale snapshot on source bill if it had been requested
         if (sourceBill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
@@ -178,7 +179,7 @@ public class OrderService implements IOrderService {
         List<TableBillItem> destinationItems = new ArrayList<>(destinationExistingItems);
 
         destinationItems.addAll(sourceItems); // in-memory union, no extra query
-        recalculateBillTotals(destinationBill);
+        recalculateTotalsFromItems(destinationBill, destinationItems);
 
         // revert stale snapshot if destination had already been requested
         if (destinationBill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
@@ -262,5 +263,37 @@ public class OrderService implements IOrderService {
 
         bill.setTotalAmount(subtotal);
         tableBillRepo.save(bill);
+    }
+
+    @Transactional
+    public void recalculateTotalsFromItems(TableBill bill, List<TableBillItem> items) {
+
+        BigDecimal subtotal = items.stream()
+                .map(TableBillItem::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //TODO: Implement Discount Logic & appropriate Tax
+        //BigDecimal discountAmount = calculateDiscount(bill, subtotal);
+        //BigDecimal taxableAmount = subtotal.subtract(discountAmount);
+        //BigDecimal taxAmount = calculateTax(bill, taxableAmount);
+        //BigDecimal totalAmount = taxableAmount.add(taxAmount);
+
+        bill.setSubtotal(subtotal.setScale(2, RoundingMode.HALF_UP));
+//        bill.setDiscountAmount(discountAmount.setScale(2, RoundingMode.HALF_UP));
+//        bill.setTaxAmount(taxAmount.setScale(2, RoundingMode.HALF_UP));
+//        bill.setTotalAmount(totalAmount.setScale(2, RoundingMode.HALF_UP));
+        // managed entity — dirty checking persists this on commit
+    }
+    private BigDecimal calculateDiscount(TableBill bill, BigDecimal subtotal) {
+        BigDecimal existingDiscount = bill.getDiscountAmount() != null ? bill.getDiscountAmount() : BigDecimal.ZERO;
+        if (existingDiscount.compareTo(subtotal) > 0) {
+            throw new BusinessRuleViolationException("INVALID DISCOUNT","Discount cannot exceed subtotal");
+        }
+        return existingDiscount;
+    }
+
+    private BigDecimal calculateTax(TableBill bill, BigDecimal taxableAmount) {
+        BigDecimal taxRate = bill.getTableMaster().getRestaurant().getTaxRate(); // e.g., 0.18 for 18%
+        return taxableAmount.multiply(taxRate);
     }
 }
