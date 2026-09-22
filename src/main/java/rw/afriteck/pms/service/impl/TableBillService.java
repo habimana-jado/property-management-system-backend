@@ -7,6 +7,7 @@ import rw.afriteck.pms.dtos.BillSnapshotResponse;
 import rw.afriteck.pms.dtos.TableBillResponse;
 import rw.afriteck.pms.dtos.CombinedBillLineResponse;
 import rw.afriteck.pms.enums.EBillStatus;
+import rw.afriteck.pms.enums.ETableBillItemStatus;
 import rw.afriteck.pms.enums.ETableStatus;
 import rw.afriteck.pms.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.exception.ResourceNotFoundException;
@@ -47,7 +48,7 @@ public class TableBillService implements ITableBillService {
         }
 
         TableBill bill = activeBill.get();
-        List<TableBillItem> items = tableBillItemRepo.findByTableBillId(bill.getId());
+        List<TableBillItem> items = tableBillItemRepo.findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
 
         return tableBillResponseMapper.toTableBillResponse(bill, tableMaster, items);
     }
@@ -63,7 +64,7 @@ public class TableBillService implements ITableBillService {
         TableMaster tableMaster = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table Master", tableId));
 
-        List<TableBillItem> tableBillItems = tableBillItemRepo.findByTableBillId(tableBill.getId());
+        List<TableBillItem> tableBillItems = tableBillItemRepo.findByTableBillIdAndStatus(tableBill.getId(), ETableBillItemStatus.ACTIVE);
         if (tableBillItems.isEmpty()) {
             throw new BusinessRuleViolationException("EMPTY_BILL_REQUEST", "Bill Requested cannot be empty Bill");
         }

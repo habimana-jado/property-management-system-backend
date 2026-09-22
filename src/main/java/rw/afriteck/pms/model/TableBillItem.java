@@ -5,8 +5,10 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import rw.afriteck.pms.enums.ETableBillItemStatus;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -26,6 +28,13 @@ public class TableBillItem {
     private BigDecimal unitPriceAtOrderTime;
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal lineTotal;
+
+    @Enumerated(EnumType.STRING)
+    private ETableBillItemStatus status = ETableBillItemStatus.ACTIVE;
+
+    private String voidReason;
+    private Instant voidedAt;
+    // TODO: @ManyToOne private Staff voidedBy;
 
     @ManyToOne
     @JoinColumn(name = "menu_master_id")

@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.dtos.*;
 import rw.afriteck.pms.enums.EBillStatus;
 import rw.afriteck.pms.enums.ERecordStatus;
+import rw.afriteck.pms.enums.ETableBillItemStatus;
 import rw.afriteck.pms.enums.ETableStatus;
 import rw.afriteck.pms.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.exception.InvalidStateException;
@@ -25,6 +26,7 @@ import rw.afriteck.pms.service.IOrderService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -81,10 +83,44 @@ public class OrderService implements IOrderService {
                 .toList();
         tableBillItemRepo.saveAll(newItems);
 
-        List<TableBillItem> allItems = tableBillItemRepo.findByTableBillId(bill.getId());
+        List<TableBillItem> allItems = tableBillItemRepo.findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
         recalculateTotalsFromItems(bill, allItems);
 
         return orderMapper.toPlacementResponse(bill, table, newItems);
+    }
+
+    @Override
+    @Transactional
+    public TableBillResponse voidItem(UUID itemId, VoidItemRequest request) {
+
+        TableBillItem item = tableBillItemRepo.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item not found",itemId));
+
+        TableBill bill = item.getTableBill();
+
+        if (bill.getBillStatus() != EBillStatus.OPEN && bill.getBillStatus() != EBillStatus.BILL_REQUESTED) {
+            throw new BusinessRuleViolationException(
+                    "INVALID_BILL_STATE", "Cannot void an item on a bill that is not active");
+        }
+        if (item.getStatus() == ETableBillItemStatus.VOIDED) {
+            throw new BusinessRuleViolationException("ALREADY_VOIDED", "Item is already voided");
+        }
+
+        item.setStatus(ETableBillItemStatus.VOIDED);
+        item.setVoidReason(request.reason());
+        item.setVoidedAt(Instant.now());
+        // managed entity — dirty checking persists this on commit
+
+        List<TableBillItem> activeItems = tableBillItemRepo
+                .findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
+
+        recalculateTotalsFromItems(bill, activeItems);
+
+        if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
+            bill.setBillStatus(EBillStatus.OPEN);
+        }
+
+        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems);
     }
 
     @Override
@@ -112,8 +148,8 @@ public class OrderService implements IOrderService {
                 .findActiveBillByTableId(sourceTableId, List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED))
                 .orElseThrow(() -> new ResourceNotFoundException("No active bill for source table", sourceTableId));
 
-        // single fetch — every item currently on the source bill
-        List<TableBillItem> allItems = tableBillItemRepo.findByTableBillId(sourceBill.getId());
+        // single fetch — every active item currently on the source bill
+        List<TableBillItem> allItems = tableBillItemRepo.findByTableBillIdAndStatus(sourceBill.getId(), ETableBillItemStatus.ACTIVE);
 
         Set<UUID> idsToMove = new HashSet<>(request.itemIdsToMove());
         Map<Boolean, List<TableBillItem>> partitioned = allItems.stream()
@@ -178,12 +214,12 @@ public class OrderService implements IOrderService {
                 .findActiveBillByTableId(sourceTable.getId(), List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED))
                 .orElseThrow(() -> new ResourceNotFoundException("Bill", sourceTable.getId()));
 
-        List<TableBillItem> sourceItems = tableBillItemRepo.findByTableBillId(sourceBill.getId());
+        List<TableBillItem> sourceItems = tableBillItemRepo.findByTableBillIdAndStatus(sourceBill.getId(), ETableBillItemStatus.ACTIVE);
         if (sourceItems.isEmpty()) {
             throw new BusinessRuleViolationException("Source Items", "Source table has no items to merge");
         }
 
-        List<TableBillItem> destinationExistingItems = tableBillItemRepo.findByTableBillId(destinationBill.getId());
+        List<TableBillItem> destinationExistingItems = tableBillItemRepo.findByTableBillIdAndStatus(destinationBill.getId(), ETableBillItemStatus.ACTIVE);
 
         // reparent all source items onto the destination bill
         for (TableBillItem item : sourceItems) {
