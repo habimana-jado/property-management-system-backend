@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TableMasterService implements ITableMasterService {
+public class TableMasterServiceImpl implements ITableMasterService {
 
     private final TableMasterRepo tableMasterRepo;
     private final RestaurantRepo restaurantRepo;

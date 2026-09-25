@@ -3,3 +3,9 @@ spring:
     name: property-management-system
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  jwt:
+    secret: "@SecurelyAndRandomlyGeneratedSecretKeyOfAtLeast32BytesLength@!"
+    access-token-validity-ms: 900000
+    refresh-token-validity-ms: 604800000

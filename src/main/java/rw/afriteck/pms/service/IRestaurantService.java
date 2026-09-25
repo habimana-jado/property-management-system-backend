@@ -26,4 +26,5 @@ public interface IRestaurantService {
     RestaurantResponse deactivate(UUID restaurantId);
 
     Page<RestaurantResponse> findByHotelBranchAndActive(UUID hotelBranchId, Pageable pageable);
+
 }

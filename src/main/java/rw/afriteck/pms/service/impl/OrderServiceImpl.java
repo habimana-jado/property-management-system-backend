@@ -33,14 +33,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class OrderService implements IOrderService {
+public class OrderServiceImpl implements IOrderService {
 
     private final TableMasterRepo tableMasterRepo;
     private final TableBillRepo tableBillRepo;
     private final TableBillItemRepo tableBillItemRepo;
     private final MenuMasterRepo menuMasterRepo;
     private final TableBillItemMapper tableBillItemMapper;
-    private final BillNumberGeneratorService billNumberGeneratorService;
+    private final BillNumberGeneratorServiceImpl billNumberGeneratorServiceImpl;
     private static final List<EBillStatus> ACTIVE_BILL_STATUSES =
             List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED);
     private final TableBillResponseMapper tableBillResponseMapper;
@@ -288,7 +288,7 @@ public class OrderService implements IOrderService {
     private TableBill openNewBill(TableMaster table) {
         TableBill bill = new TableBill();
         bill.setTableMaster(table);
-        bill.setBillNo(billNumberGeneratorService.generateBillNo(table.getRestaurant().getId(), table.getRestaurant().getRestaurantCode()));
+        bill.setBillNo(billNumberGeneratorServiceImpl.generateBillNo(table.getRestaurant().getId(), table.getRestaurant().getRestaurantCode()));
         bill.setBillStatus(EBillStatus.OPEN);
         bill.setSubtotal(BigDecimal.ZERO);
         //TODO: Replace with real Tax values and Discount implementation

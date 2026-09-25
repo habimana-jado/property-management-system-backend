@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TableBillService implements ITableBillService {
+public class TableBillServiceImpl implements ITableBillService {
     private final TableMasterRepo tableMasterRepo;
     private final TableBillItemRepo tableBillItemRepo;
     private final TableBillRepo tableBillRepo;

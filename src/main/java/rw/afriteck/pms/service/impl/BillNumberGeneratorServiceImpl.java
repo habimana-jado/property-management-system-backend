@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class BillNumberGeneratorService implements IBillNumberGeneratorService {
+public class BillNumberGeneratorServiceImpl implements IBillNumberGeneratorService {
 
     private final BillNumberCounterRepo billNumberCounterRepo;
 

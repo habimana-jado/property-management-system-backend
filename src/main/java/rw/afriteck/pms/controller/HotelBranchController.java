@@ -11,9 +11,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.dtos.CreateHotelBranchRequest;
 import rw.afriteck.pms.dtos.HotelBranchResponse;
 import rw.afriteck.pms.dtos.RestaurantResponse;
+import rw.afriteck.pms.dtos.StaffResponse;
 import rw.afriteck.pms.model.HotelBranch;
 import rw.afriteck.pms.service.IHotelBranchService;
 import rw.afriteck.pms.service.IRestaurantService;
+import rw.afriteck.pms.service.StaffService;
 
 import java.net.URI;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class HotelBranchController {
     private final IHotelBranchService hotelBranchService;
     private final IRestaurantService restaurantService;
+    private final StaffService staffService;
 
     @PostMapping
     public ResponseEntity<HotelBranchResponse> registerHotelBranch(@Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){
@@ -61,6 +64,11 @@ public class HotelBranchController {
     @GetMapping("/{id}/restaurants")
     public ResponseEntity<Page<RestaurantResponse>> findRestaurant(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(id, pageable));
+    }
+
+    @GetMapping("/{id}/staffs")
+    public List<StaffResponse> findStaffs(@PathVariable("id") UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return staffService.findByHotelBranch(hotelBranchId, pageable);
     }
 
     @PatchMapping("/{id}/activate")

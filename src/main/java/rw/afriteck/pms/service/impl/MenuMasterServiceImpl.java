@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class MenuMasterService implements IMenuMasterService {
+public class MenuMasterServiceImpl implements IMenuMasterService {
     private final MenuMasterRepo menuMasterRepo;
     private final MenuMasterMapper menuMasterMapper;
     private final MenuCategoryRepo menuCategoryRepo;
