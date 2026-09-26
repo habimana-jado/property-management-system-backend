@@ -11,6 +11,7 @@
 	<groupId>rw.afriteck.pms</groupId>
 	<artifactId>property-management-system</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
 	<name/>
 	<description/>
 	<url/>

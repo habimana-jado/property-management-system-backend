@@ -15,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "table_bills")
-public class TableBill {
+public class TableBill extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -44,7 +44,7 @@ public class TableBill {
     private String compReason;
 
     @Column(name = "comp_authorized_by")
-    private String compAuthorizedBy; // TODO: swap for a Staff FK once there's staff auth
+    private String compAuthorizedBy;
 
     @Column(name = "comped_at")
     private Instant compedAt;

@@ -10,17 +10,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Login/credentials identity - deliberately separate from Staff (profile/HR data).
- * A Staff can exist with no User yet (not onboarded to login); a User can never
- * exist without a Staff, which is why the FK lives here, NOT NULL.
- */
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class User extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

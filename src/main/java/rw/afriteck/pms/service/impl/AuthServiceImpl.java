@@ -82,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toSet());
 
         String accessToken = tokenProvider.generateAccessToken(
-                user.getId(), user.getUsername(), user.getStaff().getHotelBranch().getId(),
+                user.getId(), user.getStaff().getId(), user.getUsername(), user.getStaff().getHotelBranch().getId(),
                 roleNames, permissionCodes);
         String refreshToken = tokenProvider.generateRefreshToken(user.getId());
 

@@ -1,7 +1,6 @@
 package rw.afriteck.pms.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "table_bill_items")
-public class TableBillItem {
+public class TableBillItem extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -34,7 +33,6 @@ public class TableBillItem {
 
     private String voidReason;
     private Instant voidedAt;
-    // TODO: @ManyToOne private Staff voidedBy;
 
     @ManyToOne
     @JoinColumn(name = "menu_master_id")
