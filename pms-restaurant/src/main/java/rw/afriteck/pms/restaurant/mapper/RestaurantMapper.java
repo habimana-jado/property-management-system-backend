@@ -1,0 +1,22 @@
+package rw.afriteck.pms.restaurant.mapper;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import rw.afriteck.pms.restaurant.dtos.CreateRestaurantRequest;
+import rw.afriteck.pms.restaurant.dtos.RestaurantResponse;
+import rw.afriteck.pms.restaurant.model.Restaurant;
+
+@Mapper(componentModel = "spring")
+public interface RestaurantMapper {
+
+    @Mapping(target = "hotelBranchId", source = "hotelBranch.id")
+    RestaurantResponse toResponse(Restaurant restaurant);
+
+    Restaurant toEntity(CreateRestaurantRequest restaurantRequest);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "hotelBranch", ignore = true)
+    void updateEntityFromRequest(CreateRestaurantRequest request, @MappingTarget Restaurant entity);
+
+}

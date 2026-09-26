@@ -1,0 +1,56 @@
+package rw.afriteck.pms.restaurant.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import rw.afriteck.pms.restaurant.dtos.CreateMenuCategoryRequest;
+import rw.afriteck.pms.restaurant.dtos.MenuCategoryResponse;
+import rw.afriteck.pms.restaurant.service.IMenuCategoryService;
+
+import java.net.URI;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/pms/menu-categories")
+@RequiredArgsConstructor
+public class MenuCategoryController {
+    private final IMenuCategoryService menuCategoryService;
+
+    @PostMapping
+    public ResponseEntity<MenuCategoryResponse> register(@Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
+        MenuCategoryResponse menuCategoryResponse = menuCategoryService.register(menuCategoryRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(menuCategoryResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(menuCategoryResponse);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<MenuCategoryResponse> update(@PathVariable("id") UUID id, @Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
+        MenuCategoryResponse menuCategoryResponse = menuCategoryService.update(id, menuCategoryRequest);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(menuCategoryResponse.id())
+                .toUri();
+        return ResponseEntity.created(location).body(menuCategoryResponse);
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<MenuCategoryResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return ResponseEntity.ok(menuCategoryService.findAll(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MenuCategoryResponse> findOne(@PathVariable("id")UUID id){
+        return ResponseEntity.ok(menuCategoryService.findOne(id));
+    }
+
+}

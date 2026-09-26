@@ -1,0 +1,21 @@
+package rw.afriteck.pms.restaurant.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import rw.afriteck.pms.restaurant.enums.ETableBillItemStatus;
+import rw.afriteck.pms.restaurant.model.TableBillItem;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+public interface TableBillItemRepo extends JpaRepository<TableBillItem, UUID> {
+
+    @Query("SELECT COALESCE(SUM(i.lineTotal), 0) FROM TableBillItem i WHERE i.tableBill.id = :billId")
+    BigDecimal sumLineTotalsByBillId(@Param("billId") UUID billId);
+
+    List<TableBillItem> findByTableBillIdAndStatus(UUID tableBillId, ETableBillItemStatus status);
+
+    long countByTableBillId(UUID tableBillId);
+}
