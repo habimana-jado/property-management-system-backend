@@ -45,7 +45,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @SuppressWarnings("unchecked")
     private Authentication buildAuthentication(Claims claims) {
         UUID userId = UUID.fromString(claims.getSubject());
-        UUID staffId = claims.get("staffId", UUID.class);
+
+        String staffIdStr = claims.get("staffId", String.class);
+        UUID staffId = staffIdStr != null ? UUID.fromString(staffIdStr) : null;
 
         Collection<String> permissionCodes = claims.get("authorities", Collection.class);
         List<SimpleGrantedAuthority> authorities = permissionCodes == null

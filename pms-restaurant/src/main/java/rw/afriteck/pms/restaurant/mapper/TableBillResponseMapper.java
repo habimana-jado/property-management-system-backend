@@ -7,6 +7,7 @@ import rw.afriteck.pms.restaurant.model.TableBill;
 import rw.afriteck.pms.restaurant.model.TableBillItem;
 import rw.afriteck.pms.restaurant.model.TableMaster;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper(componentModel = "spring", uses = TableBillItemMapper.class)
@@ -20,5 +21,5 @@ public interface TableBillResponseMapper {
     @Mapping(source = "tableBill.totalAmount", target = "totalAmount")
     @Mapping(source = "tableMaster.tableNumber", target = "tableNumber")
     @Mapping(source = "items", target = "tableBillItems")
-    TableBillResponse toTableBillResponse(TableBill tableBill, TableMaster tableMaster, List<TableBillItem> items);
+    TableBillResponse toTableBillResponse(TableBill tableBill, TableMaster tableMaster, List<TableBillItem> items, BigDecimal amountPaid, BigDecimal remainingBalance);
 }

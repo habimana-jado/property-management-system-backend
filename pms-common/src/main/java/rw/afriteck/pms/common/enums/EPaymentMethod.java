@@ -1,4 +1,4 @@
-package rw.afriteck.pms.payment.enums;
+package rw.afriteck.pms.common.enums;
 
 public enum EPaymentMethod {
     CASH,

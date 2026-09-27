@@ -3,10 +3,13 @@ package rw.afriteck.pms.restaurant.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.InvalidStateException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
+import rw.afriteck.pms.payment.model.Payment;
+import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.restaurant.dtos.*;
 import rw.afriteck.pms.restaurant.enums.EBillStatus;
 import rw.afriteck.pms.restaurant.enums.ETableBillItemStatus;
@@ -42,9 +45,10 @@ public class OrderServiceImpl implements IOrderService {
     private final TableBillItemMapper tableBillItemMapper;
     private final BillNumberGeneratorServiceImpl billNumberGeneratorServiceImpl;
     private static final List<EBillStatus> ACTIVE_BILL_STATUSES =
-            List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED);
+            List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED, EBillStatus.PARTIALLY_PAID);
     private final TableBillResponseMapper tableBillResponseMapper;
     private final OrderMapper orderMapper;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional
@@ -120,7 +124,8 @@ public class OrderServiceImpl implements IOrderService {
             bill.setBillStatus(EBillStatus.OPEN);
         }
 
-        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems);
+        //TODO Do no return TableBillResponse here
+        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems, BigDecimal.ZERO, BigDecimal.ZERO);
     }
 
     @Override
@@ -183,9 +188,15 @@ public class OrderServiceImpl implements IOrderService {
             sourceBill.setBillStatus(EBillStatus.OPEN);
         }
 
+        BigDecimal sourceBillAmountPaid = paymentService.sumPaidAmount(sourceBill.getId(), EPayableType.TABLE_BILL);
+        BigDecimal sourceBillRemaining = sourceBill.getTotalAmount().subtract(sourceBillAmountPaid);
+
+        BigDecimal newBillAmountPaid = paymentService.sumPaidAmount(newBill.getId(), EPayableType.TABLE_BILL);
+        BigDecimal newBillRemaining = newBill.getTotalAmount().subtract(newBillAmountPaid);
+
         return new TableSplitResponse(
-                tableBillResponseMapper.toTableBillResponse(sourceBill, sourceTable, itemsRemaining),
-                tableBillResponseMapper.toTableBillResponse(newBill, targetTable, itemsToMove)
+                tableBillResponseMapper.toTableBillResponse(sourceBill, sourceTable, itemsRemaining, sourceBillAmountPaid, sourceBillRemaining),
+                tableBillResponseMapper.toTableBillResponse(newBill, targetTable, itemsToMove, newBillAmountPaid, newBillRemaining)
         );
     }
 
@@ -244,7 +255,10 @@ public class OrderServiceImpl implements IOrderService {
         // free up the source table
         sourceTable.setTableStatus(ETableStatus.AVAILABLE);
 
-        return tableBillResponseMapper.toTableBillResponse(destinationBill, destinationTable, destinationItems);
+        BigDecimal amountPaid = paymentService.sumPaidAmount(destinationBill.getId(), EPayableType.TABLE_BILL);
+        BigDecimal remaining = destinationBill.getTotalAmount().subtract(amountPaid);
+
+        return tableBillResponseMapper.toTableBillResponse(destinationBill, destinationTable, destinationItems, amountPaid, remaining);
     }
 
     // OCCUPIED or AVAILABLE are both fine to accept orders — one opens a new bill,

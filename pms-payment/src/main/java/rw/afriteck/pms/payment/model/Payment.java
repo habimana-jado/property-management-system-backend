@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
-import rw.afriteck.pms.payment.enums.EPaymentMethod;
-import rw.afriteck.pms.payment.enums.EPaymentSourceType;
+import rw.afriteck.pms.common.enums.EPaymentMethod;
+import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.payment.enums.EPaymentStatus;
 
 import java.math.BigDecimal;
@@ -34,12 +34,12 @@ public class Payment extends Auditable {
     private EPaymentStatus status;
 
     private Instant paidAt;
-    //TODO Rename to meaningful Online/Momo Transaction Reference ID
+
     private String reference;
 
     @Column(nullable = false)
-    private UUID sourceReferenceId;      // e.g. the RestaurantOrder id or RoomBooking id
+    private UUID payableId;
 
     @Enumerated(EnumType.STRING)
-    private EPaymentSourceType sourceType;
+    private EPayableType payableType;
 }

@@ -1,6 +1,8 @@
 package rw.afriteck.pms.restaurant.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import rw.afriteck.pms.restaurant.enums.EBillStatus;
@@ -19,4 +21,8 @@ public interface TableBillRepo extends JpaRepository<TableBill, UUID> {
             @Param("tableId") UUID tableId,
             @Param("statuses") List<EBillStatus> statuses
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT tb FROM TableBill tb WHERE tb.id = :id")
+    Optional<TableBill> findByIdForUpdate(@Param("id") UUID id);
 }

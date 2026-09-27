@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import rw.afriteck.pms.payment.dtos.RecordPaymentRequest;
+import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
 import rw.afriteck.pms.restaurant.dtos.CompBillRequest;
 import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
 import rw.afriteck.pms.restaurant.dtos.VoidItemRequest;

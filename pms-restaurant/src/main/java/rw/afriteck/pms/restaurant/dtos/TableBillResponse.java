@@ -14,6 +14,8 @@ public record TableBillResponse(
         BigDecimal taxAmount,
         BigDecimal discountAmount,
         BigDecimal totalAmount,
+        BigDecimal amountPaid,
+        BigDecimal remainingBalance,
 
         //Table Details
         String tableNumber,
@@ -25,7 +27,7 @@ public record TableBillResponse(
     public static TableBillResponse empty(String tableNumber) {
         return new TableBillResponse(
                 null, null,
-                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 tableNumber,
                 List.of()
         );

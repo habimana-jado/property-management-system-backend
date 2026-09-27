@@ -5,11 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
-import rw.afriteck.pms.payment.dtos.PaymentResponse;
-import rw.afriteck.pms.payment.dtos.RecordPaymentRequest;
-import rw.afriteck.pms.payment.enums.EPaymentSourceType;
+import rw.afriteck.pms.payment.dtos.PaymentResult;
+import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
+import rw.afriteck.pms.common.enums.EPayableType;
+import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
 import rw.afriteck.pms.payment.mapper.PaymentMapper;
-import rw.afriteck.pms.payment.repository.PaymentRepo;
 import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.restaurant.dtos.BillSnapshotResponse;
 import rw.afriteck.pms.restaurant.dtos.CombinedBillLineResponse;
@@ -51,7 +51,7 @@ public class TableBillServiceImpl implements ITableBillService {
         TableMaster tableMaster = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table Master", tableId));
 
-        Optional<TableBill> activeBill = tableBillRepo.findActiveBillByTableId(tableId, List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED));
+        Optional<TableBill> activeBill = tableBillRepo.findActiveBillByTableId(tableId, List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED, EBillStatus.PARTIALLY_PAID));
 
         if (activeBill.isEmpty()) {
             return TableBillResponse.empty(tableMaster.getTableNumber());
@@ -60,7 +60,10 @@ public class TableBillServiceImpl implements ITableBillService {
         TableBill bill = activeBill.get();
         List<TableBillItem> items = tableBillItemRepo.findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
 
-        return tableBillResponseMapper.toTableBillResponse(bill, tableMaster, items);
+        BigDecimal amountPaid = paymentService.sumPaidAmount(bill.getId(), EPayableType.TABLE_BILL); // call into pms-payment
+        BigDecimal remaining = bill.getTotalAmount().subtract(amountPaid);
+
+        return tableBillResponseMapper.toTableBillResponse(bill, tableMaster, items, amountPaid, remaining);
     }
 
     @Override
@@ -94,54 +97,32 @@ public class TableBillServiceImpl implements ITableBillService {
     @Transactional
     public TableBillResponse recordPayment(UUID tableBillId, RecordPaymentRequest request) {
 
-        TableBill bill = tableBillRepo.findById(tableBillId)
-                .orElseThrow(() -> new ResourceNotFoundException("Bill not found", tableBillId));
+        TableBill bill = tableBillRepo.findByIdForUpdate(tableBillId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill", tableBillId));
 
         if (bill.getBillStatus() == EBillStatus.PAID || bill.getBillStatus() == EBillStatus.CANCELLED) {
             throw new BusinessRuleViolationException("INVALID_BILL_STATE", "Bill is already settled or cancelled");
         }
 
-//        BigDecimal alreadyPaid = paymentRepo.sumActiveAmountByBillId(bill.getId());
-//        BigDecimal remainingBalance = bill.getTotalAmount().subtract(alreadyPaid);
-//
-//        if (request.amount().compareTo(remainingBalance) > 0) {
-//            throw new BusinessRuleViolationException("OVERPAYMENT", "Payment exceeds remaining balance");
-//        }
-//
-//        Payment payment = new Payment();
-//        payment.setTableBill(bill);
-//        payment.setAmount(request.amount());
-//        payment.setMethod(request.method());
-//        payment.setStatus(EPaymentStatus.COMPLETED);
-//        payment.setPaidAt(Instant.now());
-//        payment.setReference(request.reference());
-//        paymentRepo.save(payment);
+        PaymentResult result = paymentService.processPayment(new ProcessPaymentRequest(
+                bill.getId(),
+                EPayableType.TABLE_BILL,
+                bill.getTotalAmount(),
+                request.amount(),
+                request.method(),
+                request.reference()
+        ));
 
+        bill.setBillStatus(result.fullySettled() ? EBillStatus.PAID : EBillStatus.PARTIALLY_PAID);
 
-        //TODO Fix this function probably from here downward
-//        RecordPaymentRequest fullPaymentRequest = paymentMapper.toPaymentRequest()
-//        request.sourceReferenceId(bill.getId());
-//        request.sourceType(EPaymentSourceType.RESTAURANT_ORDER);
-//        PaymentResponse payment =  paymentService.processPayment(request);
-//        if(!payment.status().equals("COMPLETED")){
-//            throw an exception
-//        }
-
-//        BigDecimal newTotalPaid = alreadyPaid.add(request.amount());
-//        EBillStatus newStatus = newTotalPaid.compareTo(bill.getTotalAmount()) == 0
-//                ? EBillStatus.PAID
-//                : EBillStatus.PARTIALLY_PAID;
-//
-//        bill.setBillStatus(newStatus);
-
-//        if (newStatus == EBillStatus.PAID) {
-//            bill.getTableMaster().setTableStatus(ETableStatus.AVAILABLE); // table frees up on settlement
-//        }
+        if (result.fullySettled()) {
+            bill.getTableMaster().setTableStatus(ETableStatus.AVAILABLE);
+        }
 
         List<TableBillItem> items = tableBillItemRepo
                 .findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
 
-        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), items);
+        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), items, request.amount(), result.remainingBalance());
     }
 
     @Override
@@ -171,7 +152,7 @@ public class TableBillServiceImpl implements ITableBillService {
 
         bill.getTableMaster().setTableStatus(ETableStatus.AVAILABLE);
 
-        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems);
+        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems, BigDecimal.ZERO, bill.getTotalAmount());
     }
 
     public List<CombinedBillLineResponse> combineForBillSnapshot(List<TableBillItem> items) {
