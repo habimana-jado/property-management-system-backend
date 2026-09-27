@@ -10,9 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.*;
-import rw.afriteck.pms.restaurant.service.IOrderService;
-import rw.afriteck.pms.restaurant.service.ITableBillService;
-import rw.afriteck.pms.restaurant.service.ITableMasterService;
+import rw.afriteck.pms.restaurant.service.OrderService;
+import rw.afriteck.pms.restaurant.service.TableBillService;
+import rw.afriteck.pms.restaurant.service.TableMasterService;
 
 import java.net.URI;
 import java.util.UUID;
@@ -21,9 +21,9 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/tables")
 @RequiredArgsConstructor
 public class TableMasterController {
-    private final ITableMasterService tableMasterService;
-    private final IOrderService orderService;
-    private final ITableBillService tableBillService;
+    private final TableMasterService tableMasterService;
+    private final OrderService orderService;
+    private final TableBillService tableBillService;
 
     @PostMapping("/{tableId}/orders")
     public ResponseEntity<OrderPlacementResponse> placeOrder(

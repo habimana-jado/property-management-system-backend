@@ -28,6 +28,7 @@
         <module>pms-app</module>
         <module>pms-property</module>
         <module>pms-payment</module>
+        <module>pms-pos</module>
     </modules>
     <scm>
         <connection/>

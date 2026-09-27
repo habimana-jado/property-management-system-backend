@@ -11,7 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.CreateMenuMasterRequest;
 import rw.afriteck.pms.restaurant.dtos.MenuMasterResponse;
 import rw.afriteck.pms.restaurant.dtos.UpdatePriceRequest;
-import rw.afriteck.pms.restaurant.service.IMenuMasterService;
+import rw.afriteck.pms.restaurant.service.MenuMasterService;
 
 import java.net.URI;
 import java.util.UUID;
@@ -20,7 +20,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/menu-items")
 @RequiredArgsConstructor
 public class MenuMasterController {
-    private final IMenuMasterService menuMasterService;
+    private final MenuMasterService menuMasterService;
 
     @PostMapping
     public ResponseEntity<MenuMasterResponse> register(@Valid @RequestBody CreateMenuMasterRequest menuMasterRequest){

@@ -7,7 +7,7 @@ import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public interface IPaymentService {
+public interface PaymentService {
     PaymentResult processPayment(ProcessPaymentRequest paymentRequest);
 
     BigDecimal sumPaidAmount(UUID payableId, EPayableType payableType);

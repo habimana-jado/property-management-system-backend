@@ -44,6 +44,11 @@
             <artifactId>pms-restaurant</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>rw.afriteck.pms</groupId>
+            <artifactId>pms-pos</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

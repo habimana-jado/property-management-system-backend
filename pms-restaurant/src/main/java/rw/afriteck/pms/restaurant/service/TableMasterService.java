@@ -8,7 +8,7 @@ import rw.afriteck.pms.restaurant.enums.ETableStatus;
 
 import java.util.UUID;
 
-public interface ITableMasterService {
+public interface TableMasterService {
     TableMasterResponse register(CreateTableMasterRequest tableMasterRequest);
 
     TableMasterResponse update(UUID id, CreateTableMasterRequest tableMasterRequest);

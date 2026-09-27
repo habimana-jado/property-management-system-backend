@@ -8,7 +8,6 @@ import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.InvalidStateException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
-import rw.afriteck.pms.payment.model.Payment;
 import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.restaurant.dtos.*;
 import rw.afriteck.pms.restaurant.enums.EBillStatus;
@@ -25,7 +24,7 @@ import rw.afriteck.pms.restaurant.repository.MenuMasterRepo;
 import rw.afriteck.pms.restaurant.repository.TableBillItemRepo;
 import rw.afriteck.pms.restaurant.repository.TableBillRepo;
 import rw.afriteck.pms.restaurant.repository.TableMasterRepo;
-import rw.afriteck.pms.restaurant.service.IOrderService;
+import rw.afriteck.pms.restaurant.service.OrderService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImpl implements IOrderService {
+public class OrderServiceImpl implements OrderService {
 
     private final TableMasterRepo tableMasterRepo;
     private final TableBillRepo tableBillRepo;
@@ -211,10 +210,10 @@ public class OrderServiceImpl implements IOrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Source Table",request.sourceTableId()));
 
         if (destinationTable.getId().equals(sourceTable.getId())) {
-            throw new BusinessRuleViolationException("TABLE CONFLICT","Cannot merge a table into itself");
+            throw new BusinessRuleViolationException("TABLE_CONFLICT","Cannot merge a table into itself");
         }
         if (!destinationTable.getRestaurant().getId().equals(sourceTable.getRestaurant().getId())) {
-            throw new BusinessRuleViolationException("TABLE CONFLICT","Cannot merge across different restaurants");
+            throw new BusinessRuleViolationException("TABLE_CONFLICT","Cannot merge across different restaurants");
         }
 
         TableBill destinationBill = tableBillRepo
@@ -227,7 +226,7 @@ public class OrderServiceImpl implements IOrderService {
 
         List<TableBillItem> sourceItems = tableBillItemRepo.findByTableBillIdAndStatus(sourceBill.getId(), ETableBillItemStatus.ACTIVE);
         if (sourceItems.isEmpty()) {
-            throw new BusinessRuleViolationException("Source Items", "Source table has no items to merge");
+            throw new BusinessRuleViolationException("NO_ITEMS_TO_MOVE", "Source table has no items to merge");
         }
 
         List<TableBillItem> destinationExistingItems = tableBillItemRepo.findByTableBillIdAndStatus(destinationBill.getId(), ETableBillItemStatus.ACTIVE);

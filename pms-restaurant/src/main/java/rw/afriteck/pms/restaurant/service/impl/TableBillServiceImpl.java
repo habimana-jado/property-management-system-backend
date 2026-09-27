@@ -26,7 +26,7 @@ import rw.afriteck.pms.restaurant.model.TableMaster;
 import rw.afriteck.pms.restaurant.repository.TableBillItemRepo;
 import rw.afriteck.pms.restaurant.repository.TableBillRepo;
 import rw.afriteck.pms.restaurant.repository.TableMasterRepo;
-import rw.afriteck.pms.restaurant.service.ITableBillService;
+import rw.afriteck.pms.restaurant.service.TableBillService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class TableBillServiceImpl implements ITableBillService {
+public class TableBillServiceImpl implements TableBillService {
     private final TableMasterRepo tableMasterRepo;
     private final TableBillItemRepo tableBillItemRepo;
     private final TableBillRepo tableBillRepo;
@@ -104,6 +104,7 @@ public class TableBillServiceImpl implements ITableBillService {
             throw new BusinessRuleViolationException("INVALID_BILL_STATE", "Bill is already settled or cancelled");
         }
 
+        //TODO Accept different payment methods at once say CASH + CARD
         PaymentResult result = paymentService.processPayment(new ProcessPaymentRequest(
                 bill.getId(),
                 EPayableType.TABLE_BILL,

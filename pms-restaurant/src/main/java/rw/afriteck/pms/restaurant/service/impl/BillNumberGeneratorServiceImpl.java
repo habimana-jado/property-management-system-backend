@@ -6,13 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.restaurant.model.BillNumberCounter;
 import rw.afriteck.pms.restaurant.repository.BillNumberCounterRepo;
-import rw.afriteck.pms.restaurant.service.IBillNumberGeneratorService;
+import rw.afriteck.pms.restaurant.service.BillNumberGeneratorService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class BillNumberGeneratorServiceImpl implements IBillNumberGeneratorService {
+public class BillNumberGeneratorServiceImpl implements BillNumberGeneratorService {
 
     private final BillNumberCounterRepo billNumberCounterRepo;
 

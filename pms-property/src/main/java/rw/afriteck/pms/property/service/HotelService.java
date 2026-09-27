@@ -7,7 +7,7 @@ import rw.afriteck.pms.property.dtos.HotelResponse;
 
 import java.util.UUID;
 
-public interface IHotelService {
+public interface HotelService {
 
     HotelResponse create(CreateHotelRequest hotelRequest);
 

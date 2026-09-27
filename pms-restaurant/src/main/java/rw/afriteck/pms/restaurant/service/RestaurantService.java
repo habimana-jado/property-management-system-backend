@@ -9,7 +9,7 @@ import rw.afriteck.pms.restaurant.dtos.RestaurantResponse;
 import java.util.List;
 import java.util.UUID;
 
-public interface IRestaurantService {
+public interface RestaurantService {
     RestaurantResponse create(CreateRestaurantRequest restaurantRequest);
 
     RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest);

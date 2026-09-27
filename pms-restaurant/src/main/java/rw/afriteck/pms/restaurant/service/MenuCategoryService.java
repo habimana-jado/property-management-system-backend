@@ -7,7 +7,7 @@ import rw.afriteck.pms.restaurant.dtos.MenuCategoryResponse;
 
 import java.util.UUID;
 
-public interface IMenuCategoryService {
+public interface MenuCategoryService {
     MenuCategoryResponse register(CreateMenuCategoryRequest menuCategoryRequest);
 
     MenuCategoryResponse update(UUID id, CreateMenuCategoryRequest menuCategoryRequest);

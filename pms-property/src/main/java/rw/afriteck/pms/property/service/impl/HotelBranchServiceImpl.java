@@ -14,13 +14,13 @@ import rw.afriteck.pms.property.model.Hotel;
 import rw.afriteck.pms.property.model.HotelBranch;
 import rw.afriteck.pms.property.repository.HotelBranchRepo;
 import rw.afriteck.pms.property.repository.HotelRepo;
-import rw.afriteck.pms.property.service.IHotelBranchService;
+import rw.afriteck.pms.property.service.HotelBranchService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class HotelBranchServiceImpl implements IHotelBranchService {
+public class HotelBranchServiceImpl implements HotelBranchService {
 
     private final HotelBranchRepo hotelBranchRepo;
     private final HotelRepo hotelRepo;

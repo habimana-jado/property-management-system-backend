@@ -8,7 +8,7 @@ import rw.afriteck.pms.restaurant.dtos.MenuMasterResponse;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public interface IMenuMasterService {
+public interface MenuMasterService {
     MenuMasterResponse register(CreateMenuMasterRequest menuMasterRequest);
 
     MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest);

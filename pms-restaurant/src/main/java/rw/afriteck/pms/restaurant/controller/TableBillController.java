@@ -9,8 +9,8 @@ import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
 import rw.afriteck.pms.restaurant.dtos.CompBillRequest;
 import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
 import rw.afriteck.pms.restaurant.dtos.VoidItemRequest;
-import rw.afriteck.pms.restaurant.service.IOrderService;
-import rw.afriteck.pms.restaurant.service.ITableBillService;
+import rw.afriteck.pms.restaurant.service.OrderService;
+import rw.afriteck.pms.restaurant.service.TableBillService;
 
 import java.util.UUID;
 
@@ -19,8 +19,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TableBillController {
 
-    private final IOrderService orderService;
-    private final ITableBillService tableBillService;
+    private final OrderService orderService;
+    private final TableBillService tableBillService;
 
     @PostMapping("/{itemId}/void")
     public ResponseEntity<TableBillResponse> voidItemOrder(

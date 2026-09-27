@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.CreateMenuCategoryRequest;
 import rw.afriteck.pms.restaurant.dtos.MenuCategoryResponse;
-import rw.afriteck.pms.restaurant.service.IMenuCategoryService;
+import rw.afriteck.pms.restaurant.service.MenuCategoryService;
 
 import java.net.URI;
 import java.util.UUID;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/menu-categories")
 @RequiredArgsConstructor
 public class MenuCategoryController {
-    private final IMenuCategoryService menuCategoryService;
+    private final MenuCategoryService menuCategoryService;
 
     @PostMapping
     public ResponseEntity<MenuCategoryResponse> register(@Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){

@@ -14,14 +14,14 @@ import rw.afriteck.pms.restaurant.model.MenuCategory;
 import rw.afriteck.pms.restaurant.model.MenuMaster;
 import rw.afriteck.pms.restaurant.repository.MenuCategoryRepo;
 import rw.afriteck.pms.restaurant.repository.MenuMasterRepo;
-import rw.afriteck.pms.restaurant.service.IMenuMasterService;
+import rw.afriteck.pms.restaurant.service.MenuMasterService;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class MenuMasterServiceImpl implements IMenuMasterService {
+public class MenuMasterServiceImpl implements MenuMasterService {
     private final MenuMasterRepo menuMasterRepo;
     private final MenuMasterMapper menuMasterMapper;
     private final MenuCategoryRepo menuCategoryRepo;

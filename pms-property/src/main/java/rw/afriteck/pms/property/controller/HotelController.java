@@ -11,8 +11,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.property.dtos.CreateHotelRequest;
 import rw.afriteck.pms.property.dtos.HotelBranchResponse;
 import rw.afriteck.pms.property.dtos.HotelResponse;
-import rw.afriteck.pms.property.service.IHotelBranchService;
-import rw.afriteck.pms.property.service.IHotelService;
+import rw.afriteck.pms.property.service.HotelBranchService;
+import rw.afriteck.pms.property.service.HotelService;
 
 import java.net.URI;
 import java.util.UUID;
@@ -21,8 +21,8 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/hotels")
 @RequiredArgsConstructor
 public class HotelController {
-    private final IHotelService hotelService;
-    private final IHotelBranchService hotelBranchService;
+    private final HotelService hotelService;
+    private final HotelBranchService hotelBranchService;
 
     @PostMapping
     public ResponseEntity<HotelResponse> registerHotel(@Valid @RequestBody CreateHotelRequest hotelRequest){

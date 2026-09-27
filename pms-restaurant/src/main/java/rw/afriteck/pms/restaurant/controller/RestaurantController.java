@@ -9,10 +9,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.*;
-import rw.afriteck.pms.restaurant.service.IMenuCategoryService;
-import rw.afriteck.pms.restaurant.service.IMenuMasterService;
-import rw.afriteck.pms.restaurant.service.IRestaurantService;
-import rw.afriteck.pms.restaurant.service.ITableMasterService;
+import rw.afriteck.pms.restaurant.service.MenuCategoryService;
+import rw.afriteck.pms.restaurant.service.MenuMasterService;
+import rw.afriteck.pms.restaurant.service.RestaurantService;
+import rw.afriteck.pms.restaurant.service.TableMasterService;
 
 import java.net.URI;
 import java.util.List;
@@ -22,10 +22,10 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/restaurants")
 @RequiredArgsConstructor
 public class RestaurantController {
-    private final IRestaurantService restaurantService;
-    private final ITableMasterService tableMasterService;
-    private final IMenuCategoryService menuCategoryService;
-    private final IMenuMasterService menuMasterService;
+    private final RestaurantService restaurantService;
+    private final TableMasterService tableMasterService;
+    private final MenuCategoryService menuCategoryService;
+    private final MenuMasterService menuMasterService;
 
     @PostMapping
     public ResponseEntity<RestaurantResponse> registerRestaurant(@Valid @RequestBody CreateRestaurantRequest restaurantRequest){
@@ -50,8 +50,10 @@ public class RestaurantController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<RestaurantResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return ResponseEntity.ok(this.restaurantService.findAll(pageable));
+    public ResponseEntity<Page<RestaurantResponse>> findByHotelBranch(@RequestParam UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return hotelBranchId != null
+                ? ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(hotelBranchId, pageable))
+                : ResponseEntity.ok(this.restaurantService.findAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -87,11 +89,6 @@ public class RestaurantController {
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<RestaurantResponse> deactivate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(restaurantService.deactivate(id));
-    }
-
-    @GetMapping("/hotel-branches/{id}")
-    public ResponseEntity<Page<RestaurantResponse>> findByHotelBranch(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(id, pageable));
     }
 
 }

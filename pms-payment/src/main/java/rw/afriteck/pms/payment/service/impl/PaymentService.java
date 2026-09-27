@@ -11,7 +11,6 @@ import rw.afriteck.pms.payment.enums.EPaymentStatus;
 import rw.afriteck.pms.payment.mapper.PaymentMapper;
 import rw.afriteck.pms.payment.model.Payment;
 import rw.afriteck.pms.payment.repository.PaymentRepo;
-import rw.afriteck.pms.payment.service.IPaymentService;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,7 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class PaymentService implements IPaymentService {
+public class PaymentService implements rw.afriteck.pms.payment.service.PaymentService {
 
     private final PaymentRepo paymentRepo;
     private final PaymentMapper paymentMapper;

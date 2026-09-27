@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -120,6 +121,13 @@ public class GlobalExceptionHandler {
             NoResourceFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, "ROUTE_NOT_FOUND",
                 "No handler found for %s %s".formatted(ex.getHttpMethod(), ex.getResourcePath()), request);
+    }
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(
+            MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String message = "Required parameter '%s' is missing"
+                .formatted(ex.getParameterName());
+        return build(HttpStatus.BAD_REQUEST, "MISSING_REQUIRED_PARAMETER", message, request);
     }
 
     // ---- 404 for unmapped routes (requires the property below) ----

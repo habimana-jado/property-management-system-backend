@@ -4,7 +4,7 @@ import rw.afriteck.pms.restaurant.dtos.*;
 
 import java.util.UUID;
 
-public interface IOrderService {
+public interface OrderService {
 
     OrderPlacementResponse placeOrder(UUID tableId, PlaceOrderRequest tableBillItemRequest);
 

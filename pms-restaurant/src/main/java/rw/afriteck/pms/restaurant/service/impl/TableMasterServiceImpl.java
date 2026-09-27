@@ -15,13 +15,13 @@ import rw.afriteck.pms.restaurant.model.Restaurant;
 import rw.afriteck.pms.restaurant.model.TableMaster;
 import rw.afriteck.pms.restaurant.repository.RestaurantRepo;
 import rw.afriteck.pms.restaurant.repository.TableMasterRepo;
-import rw.afriteck.pms.restaurant.service.ITableMasterService;
+import rw.afriteck.pms.restaurant.service.TableMasterService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TableMasterServiceImpl implements ITableMasterService {
+public class TableMasterServiceImpl implements TableMasterService {
 
     private final TableMasterRepo tableMasterRepo;
     private final RestaurantRepo restaurantRepo;

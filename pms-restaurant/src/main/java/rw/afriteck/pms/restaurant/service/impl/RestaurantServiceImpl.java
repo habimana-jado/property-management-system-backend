@@ -22,7 +22,7 @@ import rw.afriteck.pms.restaurant.model.Restaurant;
 import rw.afriteck.pms.restaurant.repository.BillNumberCounterRepo;
 import rw.afriteck.pms.restaurant.repository.MenuMasterRepo;
 import rw.afriteck.pms.restaurant.repository.RestaurantRepo;
-import rw.afriteck.pms.restaurant.service.IRestaurantService;
+import rw.afriteck.pms.restaurant.service.RestaurantService;
 
 import java.util.*;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class RestaurantServiceImpl implements IRestaurantService {
+public class RestaurantServiceImpl implements RestaurantService {
     private final RestaurantRepo restaurantRepo;
     private final RestaurantMapper restaurantMapper;
     private final HotelBranchRepo hotelBranchRepo;

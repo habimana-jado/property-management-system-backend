@@ -12,13 +12,13 @@ import rw.afriteck.pms.restaurant.model.MenuCategory;
 import rw.afriteck.pms.restaurant.model.Restaurant;
 import rw.afriteck.pms.restaurant.repository.MenuCategoryRepo;
 import rw.afriteck.pms.restaurant.repository.RestaurantRepo;
-import rw.afriteck.pms.restaurant.service.IMenuCategoryService;
+import rw.afriteck.pms.restaurant.service.MenuCategoryService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class MenuCategoryServiceImpl implements IMenuCategoryService {
+public class MenuCategoryServiceImpl implements MenuCategoryService {
     private final MenuCategoryRepo menuCategoryRepo;
     private final MenuCategoryMapper menuCategoryMapper;
     private final RestaurantRepo restaurantRepo;

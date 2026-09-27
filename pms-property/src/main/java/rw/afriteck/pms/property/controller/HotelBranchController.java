@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.property.dtos.CreateHotelBranchRequest;
 import rw.afriteck.pms.property.dtos.HotelBranchResponse;
-import rw.afriteck.pms.property.service.IHotelBranchService;
+import rw.afriteck.pms.property.service.HotelBranchService;
 
 import java.net.URI;
 import java.util.UUID;
@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/pms/hotel-branches")
 @RequiredArgsConstructor
 public class HotelBranchController {
-    private final IHotelBranchService hotelBranchService;
+    private final HotelBranchService hotelBranchService;
 
     @PostMapping
     public ResponseEntity<HotelBranchResponse> registerHotelBranch(@Valid @RequestBody CreateHotelBranchRequest hotelBranchRequest){

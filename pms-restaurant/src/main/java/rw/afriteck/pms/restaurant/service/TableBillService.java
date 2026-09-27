@@ -7,7 +7,7 @@ import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
 
 import java.util.UUID;
 
-public interface ITableBillService {
+public interface TableBillService {
     TableBillResponse requestBill(UUID tableId);
 
     BillSnapshotResponse requestBillItemsCombined(UUID tableId);

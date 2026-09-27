@@ -12,13 +12,13 @@ import rw.afriteck.pms.property.dtos.HotelResponse;
 import rw.afriteck.pms.property.mapper.HotelMapper;
 import rw.afriteck.pms.property.model.Hotel;
 import rw.afriteck.pms.property.repository.HotelRepo;
-import rw.afriteck.pms.property.service.IHotelService;
+import rw.afriteck.pms.property.service.HotelService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class HotelServiceImpl implements IHotelService {
+public class HotelServiceImpl implements HotelService {
 
     private final HotelRepo hotelRepo;
     private final HotelMapper hotelMapper;
