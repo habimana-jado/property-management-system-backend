@@ -3,7 +3,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ai_customs_copilot_dev_db
+    url: jdbc:postgresql://localhost:5432/pms_dev_db
     username: postgres
     password: root
     driver-class-name: org.postgresql.Driver
@@ -11,3 +11,9 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+pms:
+  pos:
+    upload:
+      product-image-dir: ${LOCALAPPDATA}\pms-data\pos\product-images
+      max-file-size-bytes: 2097152

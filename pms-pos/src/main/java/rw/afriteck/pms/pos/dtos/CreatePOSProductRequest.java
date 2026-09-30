@@ -12,6 +12,7 @@ public record CreatePOSProductRequest(
         @NotNull UUID categoryId,
         @NotBlank String sku,
         @NotBlank String name,
+        String barcode,
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal unitPrice,
         @NotNull boolean trackInventory
 ) {

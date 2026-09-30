@@ -12,6 +12,8 @@ public record POSProductResponse(
         String categoryName,
         String sku,
         String name,
+        String barcode,
+        String imageUrl,
         BigDecimal unitPrice,
         boolean trackInventory,
         ERecordStatus status

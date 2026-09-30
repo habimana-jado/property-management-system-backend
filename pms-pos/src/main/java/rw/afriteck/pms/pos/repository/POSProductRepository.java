@@ -1,6 +1,7 @@
 package rw.afriteck.pms.pos.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.pos.model.POSProduct;
 
 import java.util.List;
@@ -13,7 +14,13 @@ public interface POSProductRepository extends JpaRepository<POSProduct, UUID> {
 
     boolean existsByHotelBranchIdAndSku(UUID hotelBranchId, String sku);
 
+    boolean existsByHotelBranchIdAndBarcode(UUID hotelBranchId, String barcode);
+
     List<POSProduct> findByHotelBranchId(UUID hotelBranchId);
 
     List<POSProduct> findByHotelBranchIdAndCategoryId(UUID hotelBranchId, UUID categoryId);
+
+    List<POSProduct> findByHotelBranchIdAndStatus(UUID hotelBranchId, ERecordStatus status);
+
+    List<POSProduct> findByHotelBranchIdAndCategoryIdAndStatus(UUID hotelBranchId, UUID categoryId, ERecordStatus status);
 }

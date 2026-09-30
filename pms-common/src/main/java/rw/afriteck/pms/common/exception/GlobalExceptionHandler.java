@@ -15,9 +15,11 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.List;
 
@@ -178,6 +180,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "ACCESS_DENIED",
                 "You do not have permission to perform this action", request);
+    }
+
+    // ---- Unchecked File IO Exception -----
+
+    @ExceptionHandler(UncheckedIOException.class)
+    public ResponseEntity<ErrorResponse> handleFileIOException(
+            MissingServletRequestParameterException ex, HttpServletRequest request) {
+        log.warn("File IO Exception: {}", ex.getMessage());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_IO_EXCEPTION", "Unchecked File Issues", request);
+    }
+
+    // ---- Permitted size exceeded -----
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleMaxUploadSizeExceeded(
+            MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONTENT_TOO_LARGE,"FILE_TOO_LARGE",
+                "Uploaded file exceeds the maximum allowed size", request);
     }
     // ---- Fallback — anything unanticipated ----
 

@@ -12,7 +12,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "pos_product",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"hotel_branch_id", "sku"}))
+        uniqueConstraints =
+                {
+                        @UniqueConstraint(columnNames = {"hotel_branch_id", "sku"}),
+                        @UniqueConstraint(columnNames = {"hotel_branch_id", "barcode"})
+                })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,6 +31,12 @@ public class POSProduct extends Auditable {
 
     @Column(nullable = false, length = 150)
     private String name;
+
+    @Column(length = 50)
+    private String barcode;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 
     @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;

@@ -1,8 +1,12 @@
 spring:
   application:
     name: property-management-system
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 app:
   jwt:
