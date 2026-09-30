@@ -52,7 +52,7 @@ public class POSSale extends Auditable {
     @Column(name = "hotel_branch_id", nullable = false)
     private UUID hotelBranchId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "register_session_id", nullable = false)
     private POSRegisterSession registerSession;
 

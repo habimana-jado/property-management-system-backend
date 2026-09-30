@@ -2,6 +2,7 @@ package rw.afriteck.pms.restaurant.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.restaurant.model.BillNumberCounter;
@@ -17,15 +18,13 @@ public class BillNumberGeneratorServiceImpl implements BillNumberGeneratorServic
     private final BillNumberCounterRepo billNumberCounterRepo;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public String generateBillNo(UUID restaurantId, String restaurantCode) {
         BillNumberCounter counter = billNumberCounterRepo.findByIdForUpdate(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Bill Number Counter", restaurantId));
 
         long next = counter.getLastNumber() + 1;
         counter.setLastNumber(next);
-        //No need to call .save() in this case since
-        //counter is a ManagedEntity, via Hibernate behavior called dirty checking
 
         return String.format("%s-%06d", restaurantCode, next);
     }
