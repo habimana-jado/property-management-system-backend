@@ -52,7 +52,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessRuleViolationException.class)
     public ResponseEntity<ErrorResponse> handleBusinessRule(
             BusinessRuleViolationException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getErrorCode(), ex.getMessage(), request);
+        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ErrorResponse> handleForbidden(
+            ForbiddenException ex, HttpServletRequest request) {
+        return build(HttpStatus.FORBIDDEN,ex.getErrorCode(), ex.getMessage(), request);
     }
 
     // ---- Bean Validation (@Valid on @RequestBody) ----
@@ -163,6 +169,16 @@ public class GlobalExceptionHandler {
         log.warn("Data integrity violation: {}", ex.getMessage());
         return build(HttpStatus.CONFLICT, "DATA_INTEGRITY_VIOLATION",
                 "The request could not be completed due to a data conflict", request);
+    }
+
+    // ---- Access to this resource requires Authentication
+
+    @ExceptionHandler(AuthenticationRequiredException.class)
+    public ResponseEntity<ErrorResponse> handleAuthenticationRequired(
+            AuthenticationRequiredException ex,  HttpServletRequest request) {
+        log.warn("Unauthorized Access: {}", ex.getMessage());
+        return build(HttpStatus.UNAUTHORIZED,"AUTHENTICATION_REQUIRED",
+                "ex.getMessage()", request);
     }
 
     // ---- Access denied (Spring Security) ----

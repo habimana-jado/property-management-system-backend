@@ -50,4 +50,9 @@ public class POSRegisterSession extends Auditable {
     @Column(name = "cashier_id", nullable = false)
     private UUID cashierId; // FK to Staff (pms-auth)
 
+    @ManyToOne
+    @JoinColumn(name = "terminal_id", nullable = false)
+    private POSTerminal terminal;
+
+
 }

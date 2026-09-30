@@ -13,7 +13,7 @@ import rw.afriteck.pms.pos.service.POSInventoryService;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/pos-inventory")
+@RequestMapping("/api/v1/pms/pos/inventory")
 @RequiredArgsConstructor
 public class POSInventoryController {
 

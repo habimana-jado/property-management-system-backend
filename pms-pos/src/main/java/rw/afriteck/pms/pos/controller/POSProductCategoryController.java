@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/pos-product-categories")
+@RequestMapping("/api/v1/pms/pos/product-categories")
 @RequiredArgsConstructor
 public class POSProductCategoryController {
 

@@ -3,10 +3,11 @@ package rw.afriteck.pms.common.exception;
 import lombok.Getter;
 
 @Getter
-public abstract class BusinessException extends RuntimeException {
+public class ForbiddenException extends RuntimeException {
+
     private final String errorCode;
 
-    protected BusinessException(String errorCode, String message) {
+    public ForbiddenException(String errorCode, String message) {
         super(message);
         this.errorCode = errorCode;
     }
