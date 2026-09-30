@@ -3,6 +3,8 @@ package rw.afriteck.pms.pos.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +34,8 @@ public class POSProductServiceImpl implements POSProductService {
     private final POSProductCategoryRepository categoryRepo;
     private final POSProductMapper mapper;
     private final ProductImageStorage imageStorage;
+
+    private static final int SEARCH_RESULT_LIMIT = 20;
 
     @Override
     @Transactional
@@ -72,6 +76,22 @@ public class POSProductServiceImpl implements POSProductService {
         mapper.updateEntity(entity, request);
         entity.setCategory(category);
         return mapper.toResponse(entity);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<POSProductSummaryResponse> search(UUID hotelBranchId, String query) {
+        if (query == null || query.isBlank()) {
+            return List.of();
+        }
+
+        Pageable limit = PageRequest.of(0, SEARCH_RESULT_LIMIT);
+        List<POSProduct> products = productRepo.findByHotelBranchIdAndStatusAndNameContainingIgnoreCase(
+                hotelBranchId, ERecordStatus.ACTIVE, query.trim(), limit);
+
+        return products.stream()
+                .map(mapper::toSummary)
+                .toList();
     }
 
     @Override

@@ -20,6 +20,8 @@ public interface POSProductService {
 
     List<POSProductResponse> findByHotelBranchAndCategory(UUID hotelBranchId, UUID categoryId);
 
+    List<POSProductSummaryResponse> search(UUID hotelBranchId, String query);
+
     List<POSProductSummaryResponse> listForBrowse(UUID hotelBranchId, UUID categoryId);
 
     ImageStreamResult getImageStream(UUID id);

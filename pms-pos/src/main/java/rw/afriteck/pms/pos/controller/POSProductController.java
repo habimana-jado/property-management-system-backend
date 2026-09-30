@@ -33,6 +33,11 @@ public class POSProductController {
         return productService.update(id, request);
     }
 
+    @GetMapping("/search")
+    public List<POSProductSummaryResponse> search(@RequestParam UUID hotelBranchId, @RequestParam String q) {
+        return productService.search(hotelBranchId, q);
+    }
+
     @PatchMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public POSProductResponse updateImage(@PathVariable UUID id, @RequestParam("file") MultipartFile file) {
         return productService.updateImage(id, file);

@@ -1,5 +1,6 @@
 package rw.afriteck.pms.pos.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.pos.model.POSProduct;
@@ -11,6 +12,9 @@ import java.util.UUID;
 public interface POSProductRepository extends JpaRepository<POSProduct, UUID> {
 
     Optional<POSProduct> findByHotelBranchIdAndSku(UUID hotelBranchId, String sku);
+
+    List<POSProduct> findByHotelBranchIdAndStatusAndNameContainingIgnoreCase(
+            UUID hotelBranchId, ERecordStatus status, String name, Pageable pageable);
 
     boolean existsByHotelBranchIdAndSku(UUID hotelBranchId, String sku);
 
