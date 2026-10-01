@@ -49,6 +49,11 @@
             <artifactId>pms-pos</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.0.3</version> <!-- use the latest 3.0.x -->
+        </dependency>
     </dependencies>
 
     <build>

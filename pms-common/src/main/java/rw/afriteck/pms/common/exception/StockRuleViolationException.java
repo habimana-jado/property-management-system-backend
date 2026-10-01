@@ -1,0 +1,5 @@
+package rw.afriteck.pms.common.exception;
+
+public class StockRuleViolationException extends RuntimeException {
+    public StockRuleViolationException(String message) { super(message); }
+}
