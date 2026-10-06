@@ -18,6 +18,7 @@ public interface POSProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "barcode", ignore = true)
+    @Mapping(target = "stockItemId", ignore = true)
     POSProduct toEntity(CreatePOSProductRequest request);
 
     @Mapping(source = "category.id", target = "categoryId")
@@ -31,6 +32,7 @@ public interface POSProductMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "imageUrl", ignore = true)
     @Mapping(target = "barcode", ignore = true)
+    @Mapping(target = "stockItemId", ignore = true)
     void updateEntity(@MappingTarget POSProduct entity, UpdatePOSProductRequest request);
 
     POSProductSummaryResponse toSummary(POSProduct entity);

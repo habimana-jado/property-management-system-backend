@@ -7,13 +7,11 @@ import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.common.security.CurrentUserService;
-import rw.afriteck.pms.payment.dtos.PaymentResult;
 import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
 import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.pos.dtos.*;
 import rw.afriteck.pms.pos.enums.ERegisterSessionStatus;
 import rw.afriteck.pms.pos.enums.ESaleStatus;
-import rw.afriteck.pms.pos.enums.EStockMovementType;
 import rw.afriteck.pms.pos.mapper.POSSaleMapper;
 import rw.afriteck.pms.pos.model.*;
 import rw.afriteck.pms.pos.repository.*;
@@ -32,13 +30,14 @@ public class POSSaleServiceImpl implements POSSaleService {
     private final POSSaleRepository saleRepo;
     private final POSSaleItemRepository saleItemRepo;
     private final POSProductRepository productRepo;
-    private final POSInventoryRepository inventoryRepo;
-    private final POSStockMovementRepository movementRepo;
+//    private final POSInventoryRepository inventoryRepo;
+//    private final POSStockMovementRepository movementRepo;
     private final POSRegisterSessionRepository sessionRepo;
     private final SaleNumberGeneratorService saleNumberGenerator;
     private final PaymentService paymentService;
     private final POSSaleMapper mapper;
     private final CurrentUserService currentUserService;
+//    private final StockApi stockApi;
 
     @Override
     @Transactional
@@ -116,6 +115,10 @@ public class POSSaleServiceImpl implements POSSaleService {
         saleItemRepo.delete(item);
 
         List<POSSaleItem> items = getItems(saleId);
+
+//        stockApi.reverseConsumption(new ReverseConsumptionCommand(
+//                EMovementSourceType.POS_SALE_LINE, saleId, null, "Sale cancelled", currentUsername));
+
         recalculateSaleTotals(sale, items);
         return mapper.toResponse(sale, items);
     }
@@ -148,6 +151,10 @@ public class POSSaleServiceImpl implements POSSaleService {
                     "Completed sales cannot be cancelled — use a return instead");
         }
         sale.setStatus(ESaleStatus.CANCELLED);
+
+//        stockApi.reverseConsumption(new ReverseConsumptionCommand(
+//                EMovementSourceType.POS_SALE_LINE, saleId, null, "Sale cancelled", currentUsername));
+
         return mapper.toResponse(sale, getItems(saleId));
     }
 
@@ -198,24 +205,38 @@ public class POSSaleServiceImpl implements POSSaleService {
                 continue;
             }
 
-            POSInventory inventory = inventoryRepo.findForUpdate(product.getId(), sale.getHotelBranchId())
-                    .orElseThrow(() -> new ResourceNotFoundException("POSInventory", product.getId()));
+//            POSInventory inventory = inventoryRepo.findForUpdate(product.getId(), sale.getHotelBranchId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("POSInventory", product.getId()));
+//
+//            int newQuantity = inventory.getQuantityOnHand() - item.getQuantity();
+//            if (newQuantity < 0) {
+//                throw new BusinessRuleViolationException("INSUFFICIENT_STOCK",
+//                        "Insufficient stock for product " + product.getId());
+//            }
+//            inventory.setQuantityOnHand(newQuantity);
+//            inventoryRepo.save(inventory);
+//
+//            POSStockMovement movement = new POSStockMovement();
+//            movement.setProduct(product);
+//            movement.setHotelBranchId(sale.getHotelBranchId());
+//            movement.setMovementType(EStockMovementType.SALE);
+//            movement.setQuantity(-item.getQuantity());
+//            movement.setSale(sale);
+//            movementRepo.save(movement);
 
-            int newQuantity = inventory.getQuantityOnHand() - item.getQuantity();
-            if (newQuantity < 0) {
-                throw new BusinessRuleViolationException("INSUFFICIENT_STOCK",
-                        "Insufficient stock for product " + product.getId());
-            }
-            inventory.setQuantityOnHand(newQuantity);
-            inventoryRepo.save(inventory);
-
-            POSStockMovement movement = new POSStockMovement();
-            movement.setProduct(product);
-            movement.setHotelBranchId(sale.getHotelBranchId());
-            movement.setMovementType(EStockMovementType.SALE);
-            movement.setQuantity(-item.getQuantity());
-            movement.setSale(sale);
-            movementRepo.save(movement);
+//            List<SaleLine> stockLines = items().stream()
+//                    .map(i -> new SaleLine(
+//                            i.getId(),                                   // sourceLineId: the sale line's id
+//                            i.getProduct().getStockItemId(),
+//                            null,                                        // POS products map to a stock item, never a recipe
+//                            BigDecimal.valueOf(i.getQuantity()),
+//                            i.getProduct().isTrackInventory()))
+//                    .toList();
+//
+//            stockApi.consumeForSale(new ConsumeForSaleCommand(
+//                    OutletType.POS_TERMINAL, sale.getTerminal().getId(), null,
+//                    MovementSourceType.POS_SALE_LINE, sale.getId(),
+//                    stockLines, currentUsername));
         }
     }
 

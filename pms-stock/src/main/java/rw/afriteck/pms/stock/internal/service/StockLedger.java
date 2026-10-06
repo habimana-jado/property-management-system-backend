@@ -31,18 +31,36 @@ class StockLedger {
     /** Locks every (store,item) balance in a deterministic order so concurrent
      *  transactions can never deadlock on each other. Call BEFORE reading balances. */
     Map<BalanceKey, StockBalance> lockAll(Collection<BalanceKey> keys) {
+        // stores in id order, items within a store in id order: the same global lock order as before
+        Map<UUID, Set<UUID>> itemsByStore = new TreeMap<>();
+        for (BalanceKey k : keys) {
+            itemsByStore.computeIfAbsent(k.storeId(), s -> new TreeSet<>()).add(k.itemId());
+        }
+
         Map<BalanceKey, StockBalance> locked = new LinkedHashMap<>();
-        keys.stream().distinct()
-                .sorted(Comparator.comparing(BalanceKey::storeId).thenComparing(BalanceKey::itemId))
-                .forEach(k -> {
-                    try {
-                        initializer.createIfAbsent(k.storeId(), k.itemId());
-                    } catch (DataIntegrityViolationException concurrentCreate) {
-                        // another transaction created it first: fine
-                    }
-                    locked.put(k, balances.findForUpdate(k.storeId(), k.itemId()).orElseThrow());
-                });
+        itemsByStore.forEach((storeId, itemIds) -> {
+            List<StockBalance> found = balances.findAllForUpdate(storeId, itemIds);
+
+            Set<UUID> missing = new TreeSet<>(itemIds);
+            found.forEach(b -> missing.remove(b.getItem().getId()));
+            if (!missing.isEmpty()) {                          // rare: first ever movement of an item in a store
+                missing.forEach(itemId -> createQuietly(storeId, itemId));
+                found = balances.findAllForUpdate(storeId, itemIds);   // re-lock, now including the new rows
+                if (found.size() != itemIds.size()) {                       // NEW: fail loudly, not with a later NPE
+                    throw new IllegalStateException("Balance rows missing after creation for store " + storeId);
+                }
+            }
+            found.forEach(b -> locked.put(new BalanceKey(storeId, b.getItem().getId()), b));
+        });
         return locked;
+    }
+
+    private void createQuietly(UUID storeId, UUID itemId) {
+        try {
+            initializer.createIfAbsent(storeId, itemId);
+        } catch (DataIntegrityViolationException createdConcurrently) {
+            // another transaction created it first: fine
+        }
     }
 
     StockMovement post(StockBalance balance, EMovementType type, BigDecimal delta, MovementContext ctx) {

@@ -18,10 +18,9 @@ import rw.afriteck.pms.stock.internal.repository.StockMovementRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,23 +35,28 @@ class StockApiImpl implements StockApi {
 
     private record Requirement(StockItem item, BigDecimal quantity, UUID sourceLineId) {}
 
+    private record Catalog(Map<UUID, StockItem> items, Map<UUID, Recipe> recipes) {}
     @Override
-    @Transactional                                  // joins the caller's transaction
+    @Transactional
     public List<UUID> consumeForSale(ConsumeForSaleCommand cmd) {
+
+        List<SaleLine> tracked = cmd.lines().stream().filter(SaleLine::trackInventory).toList();
+        if (tracked.isEmpty()) return List.of();
+
+        tracked.forEach(this::validateShape);
+
         Store store = storeResolver.resolveIssuingStore(cmd.outletType(), cmd.outletId(), cmd.storeId());
 
-        // 1. expand sale lines (direct items and recipes) into per-ingredient requirements
-        List<Requirement> requirements = new ArrayList<>();
-        for (SaleLine line : cmd.lines()) {
-            if (line.trackInventory()) requirements.addAll(expand(line));
-        }
-        if (requirements.isEmpty()) return List.of();
+        Catalog catalog = loadCatalog(tracked);
 
-        // 2. lock all affected balances in deterministic order
+        List<Requirement> requirements = new ArrayList<>();
+        for (SaleLine line : tracked) {
+            requirements.addAll(expand(line, catalog));
+        }
+
         Map<BalanceKey, StockBalance> locked = ledger.lockAll(requirements.stream()
                 .map(r -> new BalanceKey(store.getId(), r.item().getId())).toList());
 
-        // 3. one SALE movement per requirement; any failure rolls back the whole sale
         List<UUID> ids = new ArrayList<>();
         for (Requirement r : requirements) {
             StockBalance balance = locked.get(new BalanceKey(store.getId(), r.item().getId()));
@@ -63,24 +67,46 @@ class StockApiImpl implements StockApi {
         return ids;
     }
 
-    private List<Requirement> expand(SaleLine line) {
+    private void validateShape(SaleLine line) {
         if ((line.stockItemId() == null) == (line.recipeId() == null)) {
             throw new StockRuleViolationException("A sale line needs exactly one of stockItemId or recipeId");
         }
         if (line.quantity() == null || line.quantity().signum() <= 0) {
             throw new StockRuleViolationException("Sale quantity must be positive");
         }
+    }
+
+    private Catalog loadCatalog(List<SaleLine> lines) {
+        List<UUID> itemIds = lines.stream().map(SaleLine::stockItemId)
+                .filter(Objects::nonNull).distinct().toList();
+        List<UUID> recipeIds = lines.stream().map(SaleLine::recipeId)
+                .filter(Objects::nonNull).distinct().toList();
+
+        // guard the empty case: no query, and no empty "in ()" clause
+        Map<UUID, StockItem> itemById = itemIds.isEmpty() ? Map.of()
+                : items.findAllById(itemIds).stream()
+                .collect(Collectors.toMap(StockItem::getId, Function.identity()));
+        Map<UUID, Recipe> recipeById = recipeIds.isEmpty() ? Map.of()
+                : recipes.findWithLinesByIdIn(recipeIds).stream()
+                .collect(Collectors.toMap(Recipe::getId, Function.identity()));
+
+        return new Catalog(itemById, recipeById);
+    }
+
+    private List<Requirement> expand(SaleLine line, Catalog catalog) {
         if (line.stockItemId() != null) {
-            StockItem item = items.findById(line.stockItemId()).orElseThrow(
-                    () -> new StockRuleViolationException("Unknown stock item"));
+            StockItem item = catalog.items().get(line.stockItemId());
+            if (item == null) throw new StockRuleViolationException("Unknown stock item");
             requireActive(item);
             return List.of(new Requirement(item, line.quantity(), line.sourceLineId()));
         }
-        Recipe recipe = recipes.findWithLinesById(line.recipeId()).orElseThrow(
-                () -> new StockRuleViolationException("Unknown recipe"));
+
+        Recipe recipe = catalog.recipes().get(line.recipeId());
+        if (recipe == null) throw new StockRuleViolationException("Unknown recipe");
         if (!recipe.isActive()) throw new StockRuleViolationException("Recipe is inactive: " + recipe.getName());
+
         List<Requirement> result = new ArrayList<>();
-        for (RecipeLine rl : recipe.getLines()) {
+        for (RecipeLine rl : recipe.getLines()) {                 // ingredient and units already loaded by the entity graph
             BigDecimal perUnit = conversion.toBase(rl.getIngredient(), rl.getUnit(), rl.getQuantity());
             BigDecimal total = perUnit.multiply(line.quantity()).setScale(4, RoundingMode.HALF_UP);
             if (total.signum() <= 0) {

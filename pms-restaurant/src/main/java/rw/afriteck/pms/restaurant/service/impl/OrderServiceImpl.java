@@ -48,6 +48,7 @@ public class OrderServiceImpl implements OrderService {
     private final TableBillResponseMapper tableBillResponseMapper;
     private final OrderMapper orderMapper;
     private final PaymentService paymentService;
+//    private final StockApi stockApi;
 
     @Override
     @Transactional
@@ -84,10 +85,24 @@ public class OrderServiceImpl implements OrderService {
                     return item;
                 })
                 .toList();
-        tableBillItemRepo.saveAll(newItems);
+        List<TableBillItem> saved = tableBillItemRepo.saveAll(newItems);
 
         List<TableBillItem> allItems = tableBillItemRepo.findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
         recalculateTotalsFromItems(bill, allItems);
+
+//        List<SaleLine> stockLines = saved.stream()
+//                .map(i -> new SaleLine(
+//                        i.getId(),
+//                        i.getMenuMaster().getStockItemId(),
+//                        i.getMenuMaster().getRecipeId(),
+//                        BigDecimal.valueOf(i.getTransactionQuantity()),
+//                        i.getMenuMaster().isTrackInventory()))
+//                .toList();
+//
+//        stockApi.consumeForSale(new ConsumeForSaleCommand(
+//                EOutletType.RESTAURANT, table.getRestaurant().getId(), null,   // adjust to your path to the restaurant
+//                EMovementSourceType.TABLE_BILL_LINE, bill.getId(),
+//                stockLines, currentUsername));
 
         return orderMapper.toPlacementResponse(bill, table, newItems);
     }

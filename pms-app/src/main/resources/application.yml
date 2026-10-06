@@ -1,6 +1,13 @@
 spring:
   application:
     name: property-management-system
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
   profiles:
     active: local
   servlet:

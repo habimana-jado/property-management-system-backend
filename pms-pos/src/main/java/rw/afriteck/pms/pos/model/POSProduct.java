@@ -55,4 +55,7 @@ public class POSProduct extends Auditable {
     @Column(name = "hotel_branch_id", nullable = false)
     private UUID hotelBranchId;
 
+    @Column(name = "stock_item_id")
+    private UUID stockItemId;
+
 }

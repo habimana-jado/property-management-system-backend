@@ -41,6 +41,11 @@
         </dependency>
         <dependency>
             <groupId>rw.afriteck.pms</groupId>
+            <artifactId>pms-stock</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>rw.afriteck.pms</groupId>
             <artifactId>pms-restaurant</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -52,7 +57,19 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>3.0.3</version> <!-- use the latest 3.0.x -->
+            <version>3.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5-api</artifactId>
+            <version>1.5.1</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -63,7 +80,9 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <goals><goal>repackage</goal></goals>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

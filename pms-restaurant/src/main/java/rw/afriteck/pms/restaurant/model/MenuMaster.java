@@ -21,16 +21,21 @@ public class MenuMaster extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
     @Column(nullable = false)
     private String menuItemName;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EMenuItemType menuItemType;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EPackageType packageType;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ERecordStatus status;
@@ -38,4 +43,10 @@ public class MenuMaster extends Auditable {
     @ManyToOne
     @JoinColumn(name = "menu_category_id")
     private MenuCategory menuCategory;
+
+    @Column(name = "stock_item_id")
+    private UUID stockItemId;
+
+    @Column(name = "recipe_id")
+    private UUID recipeId;
 }
