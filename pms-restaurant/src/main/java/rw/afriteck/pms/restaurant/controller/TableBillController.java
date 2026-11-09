@@ -15,7 +15,7 @@ import rw.afriteck.pms.restaurant.service.TableBillService;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/table-bills")
+@RequestMapping("/api/v1/pms/restaurant/table-bills")
 @RequiredArgsConstructor
 public class TableBillController {
 

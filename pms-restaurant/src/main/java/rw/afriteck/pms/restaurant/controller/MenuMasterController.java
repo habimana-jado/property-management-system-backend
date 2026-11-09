@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/menu-items")
+@RequestMapping("/api/v1/pms/restaurant/menu-items")
 @RequiredArgsConstructor
 public class MenuMasterController {
     private final MenuMasterService menuMasterService;

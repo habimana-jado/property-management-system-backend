@@ -7,7 +7,7 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Immutable;
 import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
-import rw.afriteck.pms.stock.internal.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,7 +20,9 @@ import java.util.UUID;
         indexes = {
                 @Index(name = "idx_mov_store_item_time", columnList = "store_id, item_id, occurred_at"),
                 @Index(name = "idx_mov_source", columnList = "source_type, source_id"),
-                @Index(name = "idx_mov_document_line", columnList = "document_line_id")
+                @Index(name = "idx_mov_document_line", columnList = "document_line_id"),
+                @Index(name = "idx_mov_item_time", columnList = "item_id, occurred_at"),
+                @Index(name = "idx_mov_time", columnList = "occurred_at")
         })
 @Getter
 @Setter

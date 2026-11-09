@@ -6,7 +6,7 @@ import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.stock.api.enums.EDocumentType;
 import rw.afriteck.pms.stock.api.enums.ETransferPurpose;
-import rw.afriteck.pms.stock.internal.enums.EDocumentStatus;
+import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "stock_document")
+@Table(name = "stock_document",
+    indexes = {@Index(name = "idx_doc_store_time", columnList = "store_id, posted_at")})
 @Getter
 @Setter
 public class StockDocument extends Auditable {

@@ -5,6 +5,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -208,6 +209,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAuthorizationDenied(AuthorizationDeniedException ex, HttpServletRequest request) {
         return build(HttpStatus.FORBIDDEN, "ACCESS_DENIED",
                 "You do not have permission to perform this action", request);
+    }
+
+    // add to StockExceptionHandler
+    @ExceptionHandler(StockNotFoundException.class)
+    ProblemDetail notFound(StockNotFoundException e) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        p.setTitle("Not found");
+        return p;
     }
 
     // ---- Unchecked File IO Exception -----

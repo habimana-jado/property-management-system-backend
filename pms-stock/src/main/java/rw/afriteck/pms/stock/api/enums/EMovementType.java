@@ -1,4 +1,4 @@
-package rw.afriteck.pms.stock.internal.enums;
+package rw.afriteck.pms.stock.api.enums;
 
 public enum EMovementType {
     OPENING_BALANCE,

@@ -32,13 +32,12 @@ import rw.afriteck.pms.stock.api.command.*;
 import rw.afriteck.pms.stock.api.enums.*;
 import rw.afriteck.pms.stock.internal.dtos.BalanceKey;
 import rw.afriteck.pms.stock.internal.dtos.MovementContext;
-import rw.afriteck.pms.stock.internal.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.StockMovementRepository;
 
 import rw.afriteck.pms.common.exception.StockRuleViolationException;
 import rw.afriteck.pms.stock.internal.enums.*;
-import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.*;
 
 @ExtendWith(MockitoExtension.class)

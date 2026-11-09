@@ -30,7 +30,7 @@ import rw.afriteck.pms.stock.api.StockOperations;
 import rw.afriteck.pms.stock.api.command.DocumentLineInput;
 import rw.afriteck.pms.stock.api.command.SingleStoreDocumentCommand;
 import rw.afriteck.pms.stock.api.enums.EDocumentType;
-import rw.afriteck.pms.stock.internal.enums.EStocktakeStatus;
+import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 import rw.afriteck.pms.stock.internal.enums.EUnitGroup;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.*;

@@ -29,13 +29,6 @@ public interface StockBalanceRepository extends JpaRepository<StockBalance, UUID
 
     List<StockBalance> findByStoreId(UUID storeId);
 
-    // Report 3: branch-wide total vs reorder level (damaged store excluded). Rows: [StockItem, BigDecimal total]
-    @Query("""
-            select i, sum(b.quantityOnHand) from StockBalance b join b.item i
-            where b.store.branch.id = :branchId and b.store.storeType <> :excluded
-              and i.active = true and i.reorderLevel is not null
-            group by i
-            having sum(b.quantityOnHand) <= i.reorderLevel
-            """)
-    List<Object[]> findLowStock(@Param("branchId") UUID branchId, @Param("excluded") EStoreType excluded);
+    List<StockBalance> findByStoreIdAndItemIdIn(UUID storeId, Collection<UUID> itemIds);
+
 }

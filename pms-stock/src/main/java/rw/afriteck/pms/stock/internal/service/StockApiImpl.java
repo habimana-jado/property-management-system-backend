@@ -10,7 +10,7 @@ import rw.afriteck.pms.stock.api.command.ReverseConsumptionCommand;
 import rw.afriteck.pms.stock.api.command.SaleLine;
 import rw.afriteck.pms.stock.internal.dtos.BalanceKey;
 import rw.afriteck.pms.stock.internal.dtos.MovementContext;
-import rw.afriteck.pms.stock.internal.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.RecipeRepository;
 import rw.afriteck.pms.stock.internal.repository.StockItemRepository;

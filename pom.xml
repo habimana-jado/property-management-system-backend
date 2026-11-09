@@ -31,6 +31,51 @@
         <module>pms-pos</module>
         <module>pms-stock</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-auth</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-restaurant</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-property</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-payment</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-pos</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>rw.afriteck.pms</groupId>
+                <artifactId>pms-stock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <scm>
         <connection/>
         <developerConnection/>

@@ -30,7 +30,7 @@ import rw.afriteck.pms.property.model.HotelBranch;
 import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
 import rw.afriteck.pms.stock.internal.dtos.BalanceKey;
 import rw.afriteck.pms.stock.internal.dtos.MovementContext;
-import rw.afriteck.pms.stock.internal.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.BranchStockSettingRepository;
 import rw.afriteck.pms.stock.internal.repository.StockBalanceRepository;

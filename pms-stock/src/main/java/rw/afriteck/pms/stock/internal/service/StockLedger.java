@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import rw.afriteck.pms.common.exception.InsufficientStockException;
 import rw.afriteck.pms.stock.internal.dtos.BalanceKey;
 import rw.afriteck.pms.stock.internal.dtos.MovementContext;
-import rw.afriteck.pms.stock.internal.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
 import rw.afriteck.pms.stock.internal.model.BranchStockSetting;
 import rw.afriteck.pms.stock.internal.model.StockBalance;
 import rw.afriteck.pms.stock.internal.model.StockMovement;

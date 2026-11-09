@@ -18,7 +18,7 @@ import java.net.URI;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/pms/tables")
+@RequestMapping("/api/v1/pms/restaurant/tables")
 @RequiredArgsConstructor
 public class TableMasterController {
     private final TableMasterService tableMasterService;
