@@ -6,4 +6,5 @@ import rw.afriteck.pms.stock.internal.model.StockCategory;
 import java.util.UUID;
 
 public interface StockCategoryRepository extends JpaRepository<StockCategory, UUID> {
+    boolean existsByCode(String code);
 }

@@ -14,7 +14,7 @@ import rw.afriteck.pms.stock.internal.dtos.BalanceKey;
 import rw.afriteck.pms.stock.internal.dtos.MovementContext;
 import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
 import rw.afriteck.pms.stock.api.enums.EMovementType;
-import rw.afriteck.pms.stock.internal.enums.EStoreType;
+import rw.afriteck.pms.stock.api.enums.EStoreType;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.StockDocumentRepository;
 import rw.afriteck.pms.stock.internal.repository.StockItemRepository;
@@ -23,10 +23,7 @@ import rw.afriteck.pms.stock.internal.repository.UnitOfMeasureRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +43,8 @@ class StockOperationsImpl  implements StockOperations {
     @Override
     @Transactional
     public UUID postDocument(SingleStoreDocumentCommand cmd) {
+        Objects.requireNonNull(cmd.performedBy(), "performedBy is required");
+
         Store store = activeStore(cmd.storeId());
         validateStoreForType(cmd.type(), store);
 
@@ -71,6 +70,7 @@ class StockOperationsImpl  implements StockOperations {
     @Override
     @Transactional
     public UUID transfer(TransferCommand cmd) {
+        Objects.requireNonNull(cmd.performedBy(), "performedBy is required");
         Store from = activeStore(cmd.fromStoreId());
         Store to = activeStore(cmd.toStoreId());
         validateTransfer(cmd.purpose(), from, to);

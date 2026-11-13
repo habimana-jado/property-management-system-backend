@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import rw.afriteck.pms.common.exception.StockRuleViolationException;
 import rw.afriteck.pms.stock.api.enums.EOutletType;
-import rw.afriteck.pms.stock.internal.enums.EStoreType;
+import rw.afriteck.pms.stock.api.enums.EStoreType;
 import rw.afriteck.pms.stock.internal.model.Store;
 import rw.afriteck.pms.stock.internal.model.StoreAssignment;
 import rw.afriteck.pms.stock.internal.repository.StoreAssignmentRepository;

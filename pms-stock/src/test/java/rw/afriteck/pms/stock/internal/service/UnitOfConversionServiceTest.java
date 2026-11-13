@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import rw.afriteck.pms.common.exception.StockRuleViolationException;
-import rw.afriteck.pms.stock.internal.enums.EUnitGroup;
+import rw.afriteck.pms.stock.api.enums.EUnitGroup;
 import rw.afriteck.pms.stock.internal.model.ItemPackaging;
 import rw.afriteck.pms.stock.internal.model.StockItem;
 import rw.afriteck.pms.stock.internal.model.UnitOfMeasure;

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
-import rw.afriteck.pms.stock.internal.enums.EItemType;
+import rw.afriteck.pms.stock.api.enums.EItemType;
 
 import java.math.BigDecimal;
 import java.util.UUID;

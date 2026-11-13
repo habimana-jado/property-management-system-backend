@@ -6,4 +6,5 @@ import rw.afriteck.pms.stock.internal.model.StockItem;
 import java.util.UUID;
 
 public interface StockItemRepository extends JpaRepository<StockItem, UUID> {
+    boolean existsByCode(String code);
 }

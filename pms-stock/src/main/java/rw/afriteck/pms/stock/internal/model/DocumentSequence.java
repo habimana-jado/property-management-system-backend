@@ -3,8 +3,8 @@ package rw.afriteck.pms.stock.internal.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.w3c.dom.DocumentType;
 import rw.afriteck.pms.property.model.HotelBranch;
+import rw.afriteck.pms.stock.api.enums.EDocumentType;
 
 import java.util.UUID;
 
@@ -24,7 +24,7 @@ public class DocumentSequence {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "document_type", nullable = false, length = 30)
-    private DocumentType documentType;
+    private EDocumentType documentType;
 
     @Column(nullable = false)
     private long lastNumber = 0;

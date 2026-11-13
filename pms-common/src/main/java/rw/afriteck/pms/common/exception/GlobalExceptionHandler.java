@@ -5,7 +5,6 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -56,17 +55,6 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
     }
 
-    @ExceptionHandler(StockRuleViolationException.class)
-    public ResponseEntity<ErrorResponse> handleStockRule(
-            BusinessRuleViolationException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
-    }
-
-    @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<ErrorResponse> handleInsufficientStockRule(
-            BusinessRuleViolationException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_CONTENT, ex.getErrorCode(), ex.getMessage(), request);
-    }
 
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(
@@ -191,7 +179,7 @@ public class GlobalExceptionHandler {
             AuthenticationRequiredException ex,  HttpServletRequest request) {
         log.warn("Unauthorized Access: {}", ex.getMessage());
         return build(HttpStatus.UNAUTHORIZED,"AUTHENTICATION_REQUIRED",
-                "ex.getMessage()", request);
+                ex.getMessage(), request);
     }
 
     // ---- Access denied (Spring Security) ----
@@ -211,19 +199,11 @@ public class GlobalExceptionHandler {
                 "You do not have permission to perform this action", request);
     }
 
-    // add to StockExceptionHandler
-    @ExceptionHandler(StockNotFoundException.class)
-    ProblemDetail notFound(StockNotFoundException e) {
-        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
-        p.setTitle("Not found");
-        return p;
-    }
-
     // ---- Unchecked File IO Exception -----
 
     @ExceptionHandler(UncheckedIOException.class)
     public ResponseEntity<ErrorResponse> handleFileIOException(
-            MissingServletRequestParameterException ex, HttpServletRequest request) {
+            UncheckedIOException ex, HttpServletRequest request) {
         log.warn("File IO Exception: {}", ex.getMessage());
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_IO_EXCEPTION", "Unchecked File Issues", request);
     }

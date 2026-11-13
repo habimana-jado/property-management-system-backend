@@ -6,4 +6,5 @@ import rw.afriteck.pms.stock.internal.model.UnitOfMeasure;
 import java.util.UUID;
 
 public interface UnitOfMeasureRepository extends JpaRepository<UnitOfMeasure, UUID> {
+    boolean existsByCode(String code);
 }

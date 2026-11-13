@@ -11,6 +11,8 @@ import java.util.UUID;
 
 public interface StockMovementRepository extends JpaRepository<StockMovement, UUID> {
 
+    boolean existsByItemId(UUID itemId);
+
     @Query("""
         select m from StockMovement m
         where m.sourceType = :type and m.sourceId = :sourceId

@@ -5,16 +5,16 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rw.afriteck.pms.stock.api.StockQueryApi;
+import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
 import rw.afriteck.pms.stock.api.enums.EDocumentType;
 import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
+import rw.afriteck.pms.stock.api.enums.EMovementType;
+import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 import rw.afriteck.pms.stock.api.query.DocumentFilter;
 import rw.afriteck.pms.stock.api.query.MovementFilter;
 import rw.afriteck.pms.stock.api.query.StockOnHandFilter;
 import rw.afriteck.pms.stock.api.query.StocktakeFilter;
 import rw.afriteck.pms.stock.api.view.*;
-import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
-import rw.afriteck.pms.stock.api.enums.EMovementType;
-import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 import rw.afriteck.pms.stock.web.security.StockPermissions;
 
 import java.time.Instant;
@@ -23,14 +23,14 @@ import java.util.Set;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/stock")
-@PreAuthorize(StockPermissions.STORE_MANAGER)
+@RequestMapping("/api/v1/pms/stock")
 @RequiredArgsConstructor
 public class StockReportController {
 
     private final StockQueryApi queries;
 
     @GetMapping("/on-hand")
+    @PreAuthorize(StockPermissions.Has.VIEW)
     public PageResult<StockOnHandRow> onHand(
             @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
@@ -42,7 +42,14 @@ public class StockReportController {
         return queries.stockOnHand(new StockOnHandFilter(branchId, storeId, categoryId, search, includeZero), page, size);
     }
 
+    @GetMapping("/low-stock")
+    @PreAuthorize(StockPermissions.Has.VIEW)
+    public List<LowStockAlert> lowStock(@RequestParam UUID branchId) {
+        return queries.lowStock(branchId);
+    }
+
     @GetMapping("/movements")
+    @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public PageResult<MovementRow> movements(
             @RequestParam(required = false) UUID storeId,
             @RequestParam(required = false) UUID itemId,
@@ -58,12 +65,8 @@ public class StockReportController {
                 page, size);
     }
 
-    @GetMapping("/low-stock")
-    public List<LowStockAlert> lowStock(@RequestParam UUID branchId) {
-        return queries.lowStock(branchId);
-    }
-
     @GetMapping("/documents")
+    @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public PageResult<StockDocumentSummary> documents(
             @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
@@ -77,11 +80,13 @@ public class StockReportController {
     }
 
     @GetMapping("/documents/{id}")
+    @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public StockDocumentView document(@PathVariable UUID id) {
         return queries.document(id);
     }
 
     @GetMapping("/stocktakes")
+    @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public PageResult<StocktakeSummary> stocktakes(
             @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
@@ -92,6 +97,7 @@ public class StockReportController {
     }
 
     @GetMapping("/stocktakes/{id}")
+    @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public StocktakeView stocktake(@PathVariable UUID id) {
         return queries.stocktake(id);
     }

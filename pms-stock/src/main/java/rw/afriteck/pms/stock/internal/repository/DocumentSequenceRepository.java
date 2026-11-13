@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public interface DocumentSequenceRepository extends JpaRepository<DocumentSequence, UUID> {
 
+    boolean existsByBranchIdAndDocumentType(UUID branchId, EDocumentType type);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from DocumentSequence s where s.branch.id = :branchId and s.documentType = :type")
     Optional<DocumentSequence> findForUpdate(@Param("branchId") UUID branchId, @Param("type") EDocumentType type);

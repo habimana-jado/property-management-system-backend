@@ -14,7 +14,7 @@ import rw.afriteck.pms.stock.api.query.MovementFilter;
 import rw.afriteck.pms.stock.api.query.StockOnHandFilter;
 import rw.afriteck.pms.stock.api.query.StocktakeFilter;
 import rw.afriteck.pms.stock.api.view.*;
-import rw.afriteck.pms.stock.internal.enums.EStoreType;
+import rw.afriteck.pms.stock.api.enums.EStoreType;
 import rw.afriteck.pms.stock.internal.model.StockDocument;
 import rw.afriteck.pms.stock.internal.model.Stocktake;
 import rw.afriteck.pms.stock.internal.model.Store;

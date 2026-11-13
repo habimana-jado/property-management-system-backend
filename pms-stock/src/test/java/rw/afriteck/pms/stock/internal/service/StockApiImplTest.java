@@ -37,7 +37,6 @@ import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.StockMovementRepository;
 
 import rw.afriteck.pms.common.exception.StockRuleViolationException;
-import rw.afriteck.pms.stock.internal.enums.*;
 import rw.afriteck.pms.stock.internal.repository.*;
 
 @ExtendWith(MockitoExtension.class)

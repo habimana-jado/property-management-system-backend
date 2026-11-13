@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.property.model.HotelBranch;
-import rw.afriteck.pms.stock.internal.enums.EStoreType;
+import rw.afriteck.pms.stock.api.enums.EStoreType;
 
 import java.util.UUID;
 

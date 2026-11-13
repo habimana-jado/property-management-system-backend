@@ -3,7 +3,7 @@ package rw.afriteck.pms.stock.internal.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import rw.afriteck.pms.common.exception.StockRuleViolationException;
-import rw.afriteck.pms.stock.internal.enums.EUnitGroup;
+import rw.afriteck.pms.stock.api.enums.EUnitGroup;
 import rw.afriteck.pms.stock.internal.model.ItemPackaging;
 import rw.afriteck.pms.stock.internal.model.StockItem;
 import rw.afriteck.pms.stock.internal.model.UnitOfMeasure;
