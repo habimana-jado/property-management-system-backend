@@ -32,20 +32,19 @@ public class StockReportController {
     @GetMapping("/on-hand")
     @PreAuthorize(StockPermissions.Has.VIEW)
     public PageResult<StockOnHandRow> onHand(
-            @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
             @RequestParam(required = false) UUID categoryId,
             @RequestParam(required = false) String search,
             @RequestParam(defaultValue = "false") boolean includeZero,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return queries.stockOnHand(new StockOnHandFilter(branchId, storeId, categoryId, search, includeZero), page, size);
+        return queries.stockOnHand(new StockOnHandFilter(storeId, categoryId, search, includeZero), page, size);
     }
 
     @GetMapping("/low-stock")
     @PreAuthorize(StockPermissions.Has.VIEW)
-    public List<LowStockAlert> lowStock(@RequestParam UUID branchId) {
-        return queries.lowStock(branchId);
+    public List<LowStockAlert> lowStock() {
+        return queries.lowStock();
     }
 
     @GetMapping("/movements")
@@ -68,7 +67,6 @@ public class StockReportController {
     @GetMapping("/documents")
     @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public PageResult<StockDocumentSummary> documents(
-            @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
             @RequestParam(required = false) EDocumentType type,
             @RequestParam(required = false) EDocumentStatus status,
@@ -76,7 +74,7 @@ public class StockReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return queries.documents(new DocumentFilter(branchId, storeId, type, status, from, to), page, size);
+        return queries.documents(new DocumentFilter(storeId, type, status, from, to), page, size);
     }
 
     @GetMapping("/documents/{id}")
@@ -88,12 +86,11 @@ public class StockReportController {
     @GetMapping("/stocktakes")
     @PreAuthorize(StockPermissions.Has.HISTORY_VIEW)
     public PageResult<StocktakeSummary> stocktakes(
-            @RequestParam UUID branchId,
             @RequestParam(required = false) UUID storeId,
             @RequestParam(required = false) EStocktakeStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return queries.stocktakes(new StocktakeFilter(branchId, storeId, status), page, size);
+        return queries.stocktakes(new StocktakeFilter(storeId, status), page, size);
     }
 
     @GetMapping("/stocktakes/{id}")

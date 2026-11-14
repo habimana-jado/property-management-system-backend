@@ -11,6 +11,7 @@ import rw.afriteck.pms.common.exception.StockRuleViolationException;
 import rw.afriteck.pms.stock.api.RecipeSetupApi;
 import rw.afriteck.pms.stock.api.setup.*;
 import rw.afriteck.pms.stock.api.view.PageResult;
+import rw.afriteck.pms.stock.internal.mapper.RecipeMapper;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.*;
 
@@ -28,6 +29,7 @@ class RecipeSetupServiceImpl implements RecipeSetupApi {
     private final StockItemRepository items;
     private final UnitOfMeasureRepository units;
     private final UnitOfConversionService conversion;
+    private final RecipeMapper recipeMapper;
 
     @PersistenceContext
     private EntityManager em;
@@ -57,7 +59,7 @@ class RecipeSetupServiceImpl implements RecipeSetupApi {
 
     @Override @Transactional(readOnly = true)
     public RecipeView recipe(UUID id) {
-        return view(load(id));
+        return recipeMapper.toView(load(id));
     }
 
     @Override
@@ -66,7 +68,7 @@ class RecipeSetupServiceImpl implements RecipeSetupApi {
         Recipe r = new Recipe();
         r.setName(c.name().trim());
         lines.forEach(l -> r.addLine(toLine(l)));
-        return view(recipes.save(r));
+        return recipeMapper.toView(recipes.save(r));
     }
 
     /** Edits apply to future sales only: past movements are already in the ledger. */
@@ -90,7 +92,7 @@ class RecipeSetupServiceImpl implements RecipeSetupApi {
         }
         r.getLines().removeIf(l -> !keep.contains(l.getIngredient().getId()));   // orphanRemoval deletes them
         r.setName(c.name().trim());
-        return view(r);
+        return recipeMapper.toView(r);
     }
 
     @Override
@@ -127,14 +129,6 @@ class RecipeSetupServiceImpl implements RecipeSetupApi {
 
     private Recipe load(UUID id) {
         return recipes.findWithLinesById(id).orElseThrow(() -> new StockNotFoundException("Recipe not found"));
-    }
-
-    private RecipeView view(Recipe r) {
-        return new RecipeView(r.getId(), r.getName(), r.isActive(), r.getLines().stream()
-                .sorted(Comparator.comparing(l -> l.getIngredient().getName()))
-                .map(l -> new RecipeLineView(l.getIngredient().getId(), l.getIngredient().getCode(),
-                        l.getIngredient().getName(), l.getQuantity(), l.getUnit().getId(), l.getUnit().getCode()))
-                .toList());
     }
 
     private static void require(boolean condition, String message) {

@@ -33,11 +33,13 @@ class StocktakeServiceImpl implements StocktakeApi {
     private final StockDocumentRepository documents;
     private final UnitOfConversionService conversion;
     private final StockOperations operations;
+    private final BranchGuard guard;
 
     @Override
     @Transactional
     public UUID start(UUID storeId, UUID startedBy) {
-        Store store = stores.findById(storeId).orElseThrow(() -> new StockRuleViolationException("Unknown store"));
+        Store store = stores.findById(storeId).filter(guard::inCurrentBranch)
+                .orElseThrow(() -> new StockRuleViolationException("Unknown store"));
         if (stocktakes.existsByStoreIdAndStatusIn(storeId, OPEN)) {
             throw new StockRuleViolationException("This store already has an open stocktake");
         }
@@ -88,6 +90,7 @@ class StocktakeServiceImpl implements StocktakeApi {
     @Transactional
     public UUID approve(UUID stocktakeId, UUID approvedBy) {
         Stocktake st = stocktakes.findForUpdate(stocktakeId)           // blocks a double approval
+                .filter(x -> guard.inCurrentBranch(x.getStore()))
                 .orElseThrow(() -> new StockRuleViolationException("Unknown stocktake"));
         require(st.getStatus() == EStocktakeStatus.SUBMITTED, "Stocktake is not submitted");
 
@@ -120,7 +123,8 @@ class StocktakeServiceImpl implements StocktakeApi {
     }
 
     private Stocktake load(UUID id) {
-        return stocktakes.findById(id).orElseThrow(() -> new StockRuleViolationException("Unknown stocktake"));
+        return stocktakes.findById(id).filter(x -> guard.inCurrentBranch(x.getStore()))
+                .orElseThrow(() -> new StockRuleViolationException("Unknown stocktake"));
     }
 
     private static void require(boolean condition, String message) {

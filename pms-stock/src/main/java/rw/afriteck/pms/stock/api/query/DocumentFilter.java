@@ -6,5 +6,5 @@ import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
 import java.time.Instant;
 import java.util.UUID;
 
-public record DocumentFilter(UUID branchId, UUID storeId, EDocumentType type, EDocumentStatus status,
+public record DocumentFilter(UUID storeId, EDocumentType type, EDocumentStatus status,
                              Instant from, Instant to) {}

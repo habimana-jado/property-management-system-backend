@@ -54,6 +54,8 @@ class StockOperationsImplTest {
     StockLedger ledger;
     @Mock
     ItemPackagingRepository packagings;
+    @Mock
+    BranchGuard guard;
 
     private StockOperationsImpl service;
 
@@ -67,7 +69,7 @@ class StockOperationsImplTest {
     @BeforeEach
     void setUp() {
         service = new StockOperationsImpl(stores, items, units, documents, numbers,
-                new UnitOfConversionService(packagings), ledger);
+                new UnitOfConversionService(packagings), ledger, guard);
 
         branch = branch();
         pcs    = unit("PCS",    EUnitGroup.COUNT,  "1");
@@ -77,6 +79,7 @@ class StockOperationsImplTest {
         soda   = item("SODA", pcs);
 
         lenient().when(numbers.next(any(), any())).thenReturn("KGL-DOC-000001");
+        lenient().when(guard.inCurrentBranch(any(Store.class))).thenReturn(true);
 
         // save assigns an id, like JPA would on persist
         lenient().when(documents.save(any(StockDocument.class))).thenAnswer(inv -> {

@@ -16,6 +16,8 @@ import rw.afriteck.pms.stock.api.enums.EOutletType;
 import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 import rw.afriteck.pms.stock.api.enums.EStoreType;
 import rw.afriteck.pms.stock.api.setup.*;
+import rw.afriteck.pms.stock.internal.mapper.AssignmentMapper;
+import rw.afriteck.pms.stock.internal.mapper.StoreMapper;
 import rw.afriteck.pms.stock.internal.model.*;
 import rw.afriteck.pms.stock.internal.repository.*;
 
@@ -37,20 +39,23 @@ class StructureSetupServiceImpl implements StructureSetupApi {
     private final BranchStockSettingRepository settings;
     private final DocumentSequenceRepository sequences;
     private final ObjectProvider<OutletDirectory> directories;     // zero beans is fine until an outlet module registers one
+    private final BranchGuard guard;
+    private final StoreMapper storeMapper;
+    private final AssignmentMapper assignmentMapper;
 
     @PersistenceContext
     private EntityManager em;
 
     // ---------------- stores ----------------
     @Override @Transactional(readOnly = true)
-    public List<StoreView> stores(UUID branchId, boolean includeInactive) {
-        return stores.findByBranchIdOrderByName(branchId).stream()
-                .filter(s -> includeInactive || s.isActive()).map(this::view).toList();
+    public List<StoreView> stores(boolean includeInactive) {
+        return stores.findByBranchIdOrderByName(guard.currentBranchId()).stream()
+                .filter(s -> includeInactive || s.isActive()).map(storeMapper::toView).toList();
     }
 
     @Override
     public StoreView createStore(StoreCommand c) {
-        HotelBranch branch = em.find(HotelBranch.class, c.branchId());
+        HotelBranch branch = em.find(HotelBranch.class, guard.currentBranchId());
         if (branch == null) throw new StockNotFoundException("Branch not found");
 
         String code = Codes.normalize(c.code());
@@ -71,7 +76,7 @@ class StructureSetupServiceImpl implements StructureSetupApi {
         stores.save(s);                                            // @PrePersist sets mainStoreKey
 
         if (c.storeType() == EStoreType.MAIN) seedBranchDefaults(branch);
-        return view(s);
+        return storeMapper.toView(s);
     }
 
     /** What document numbering and the negative-stock setting need before the branch can post anything. */
@@ -95,7 +100,7 @@ class StructureSetupServiceImpl implements StructureSetupApi {
     public StoreView renameStore(UUID id, String name) {
         Store s = store(id);
         s.setName(name.trim());
-        return view(s);
+        return storeMapper.toView(s);
     }
 
     @Override
@@ -115,12 +120,14 @@ class StructureSetupServiceImpl implements StructureSetupApi {
     // ---------------- assignments ----------------
     @Override @Transactional(readOnly = true)
     public List<AssignmentView> assignmentsForOutlet(EOutletType type, UUID outletId) {
-        return assignments.findByOutletTypeAndOutletId(type, outletId).stream().map(this::view).toList();
+        return assignments.findByOutletTypeAndOutletId(type, outletId).stream()
+                .filter(a -> guard.inCurrentBranch(a.getStore())).map(assignmentMapper::toView).toList();
     }
 
     @Override @Transactional(readOnly = true)
     public List<AssignmentView> assignmentsForStore(UUID storeId) {
-        return assignments.findByStoreId(storeId).stream().map(this::view).toList();
+        return assignments.findByStoreId(storeId).stream()
+                .filter(a -> guard.inCurrentBranch(a.getStore())).map(assignmentMapper::toView).toList();
     }
 
     @Override
@@ -152,7 +159,7 @@ class StructureSetupServiceImpl implements StructureSetupApi {
 
         a.setActive(true);
         a.setDefault(becomesDefault);
-        return view(assignments.save(a));
+        return assignmentMapper.toView(assignments.save(a));
     }
 
     @Override
@@ -185,14 +192,16 @@ class StructureSetupServiceImpl implements StructureSetupApi {
 
     // ---------------- branch settings ----------------
     @Override @Transactional(readOnly = true)
-    public BranchSettingsView branchSettings(UUID branchId) {
+    public BranchSettingsView branchSettings() {
+        UUID branchId = guard.currentBranchId();
         return settings.findByBranchId(branchId)
                 .map(s -> new BranchSettingsView(branchId, s.isAllowNegativeStock()))
                 .orElse(new BranchSettingsView(branchId, false));
     }
 
     @Override
-    public BranchSettingsView updateBranchSettings(UUID branchId, boolean allowNegativeStock) {
+    public BranchSettingsView updateBranchSettings(boolean allowNegativeStock) {
+        UUID branchId = guard.currentBranchId();
         BranchStockSetting s = settings.findByBranchId(branchId).orElseGet(() -> {
             HotelBranch branch = em.find(HotelBranch.class, branchId);
             if (branch == null) throw new StockNotFoundException("Branch not found");
@@ -212,20 +221,14 @@ class StructureSetupServiceImpl implements StructureSetupApi {
                         "Outlets of type " + type + " cannot be assigned yet"));
     }
     private Store store(UUID id) {
-        return stores.findById(id).orElseThrow(() -> new StockNotFoundException("Store not found"));
+        return stores.findById(id).filter(guard::inCurrentBranch)
+                .orElseThrow(() -> new StockNotFoundException("Store not found"));
     }
     private StoreAssignment assignment(UUID id) {
-        return assignments.findById(id).orElseThrow(() -> new StockNotFoundException("Assignment not found"));
-    }
-    private StoreView view(Store s) {
-        return new StoreView(s.getId(), s.getBranch().getId(), s.getCode(), s.getName(), s.getStoreType(), s.isActive());
-    }
-    private AssignmentView view(StoreAssignment a) {
-        return new AssignmentView(a.getId(), a.getStore().getId(), a.getStore().getName(),
-                a.getOutletType(), a.getOutletId(), a.isDefault(), a.isActive());
+        return assignments.findById(id).filter(a -> guard.inCurrentBranch(a.getStore()))
+                .orElseThrow(() -> new StockNotFoundException("Assignment not found"));
     }
     private static void require(boolean condition, String message) {
         if (!condition) throw new StockRuleViolationException(message);
     }
 }
-

@@ -28,9 +28,8 @@ public class StructureSetupController {
     // ---- stores ----
     @GetMapping("/stores")
     @PreAuthorize(StockPermissions.Has.VIEW)
-    public List<StoreView> stores(@RequestParam UUID branchId,
-                                  @RequestParam(defaultValue = "false") boolean includeInactive) {
-        return structure.stores(branchId, includeInactive);
+    public List<StoreView> stores(@RequestParam(defaultValue = "false") boolean includeInactive) {
+        return structure.stores(includeInactive);
     }
 
     @PostMapping("/stores")
@@ -83,14 +82,14 @@ public class StructureSetupController {
         return ResponseEntity.noContent().build();
     }
 
-    // ---- branch settings ----
-    @GetMapping("/branches/{branchId}/settings")
+    // ---- branch settings (always the caller's own branch) ----
+    @GetMapping("/settings")
     @PreAuthorize(StockPermissions.Has.VIEW)
-    public BranchSettingsView settings(@PathVariable UUID branchId) { return structure.branchSettings(branchId); }
+    public BranchSettingsView settings() { return structure.branchSettings(); }
 
-    @PutMapping("/branches/{branchId}/settings")
+    @PutMapping("/settings")
     @PreAuthorize(StockPermissions.Has.SETTINGS_MANAGE)
-    public BranchSettingsView updateSettings(@PathVariable UUID branchId, @RequestBody BranchSettingsRequest r) {
-        return structure.updateBranchSettings(branchId, r.allowNegativeStock());
+    public BranchSettingsView updateSettings(@RequestBody BranchSettingsRequest r) {
+        return structure.updateBranchSettings(r.allowNegativeStock());
     }
 }

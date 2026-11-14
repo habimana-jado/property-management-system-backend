@@ -59,12 +59,12 @@ class StockQueryServiceImpl implements StockQueryApi {
 
     private final StockDocumentRepository documents;
     private final StockTakeRepository stocktakes;
+    private final BranchGuard guard;
 
     // ---------------- stock on hand ----------------
     @Override
     public PageResult<StockOnHandRow> stockOnHand(StockOnHandFilter f, int page, int size) {
-        require(f.branchId() != null, "branchId is required");
-        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", f.branchId());
+        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", guard.currentBranchId());
         if (f.storeId() != null)    q.and("s.id = :storeId", "storeId", f.storeId());
         if (f.categoryId() != null) q.and("c.id = :categoryId", "categoryId", f.categoryId());
         if (hasText(f.search())) {
@@ -85,7 +85,8 @@ class StockQueryServiceImpl implements StockQueryApi {
                 "Filter movements by store, item, document, source or a start date");
         require(f.sourceId() == null || f.sourceType() != null, "sourceType is required with sourceId");
 
-        JpqlQuery q = new JpqlQuery();
+        // always restricted to the caller's branch, whatever other filter is used
+        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", guard.currentBranchId());
         if (f.storeId() != null) q.and("s.id = :storeId", "storeId", f.storeId());
         if (f.itemId() != null)  q.and("i.id = :itemId", "itemId", f.itemId());
         if (f.types() != null && !f.types().isEmpty()) q.and("m.movementType in :types", "types", f.types());
@@ -102,8 +103,8 @@ class StockQueryServiceImpl implements StockQueryApi {
 
     // ---------------- low stock (branch-wide total vs reorder level) ----------------
     @Override
-    public List<LowStockAlert> lowStock(UUID branchId) {
-        require(branchId != null, "branchId is required");
+    public List<LowStockAlert> lowStock() {
+        UUID branchId = guard.currentBranchId();
 
         // 1. active items that have a reorder level
         List<Object[]> candidates = em.createQuery("""
@@ -155,8 +156,7 @@ class StockQueryServiceImpl implements StockQueryApi {
     // ---------------- documents ----------------
     @Override
     public PageResult<StockDocumentSummary> documents(DocumentFilter f, int page, int size) {
-        require(f.branchId() != null, "branchId is required");
-        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", f.branchId());
+        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", guard.currentBranchId());
         if (f.storeId() != null) q.and("(s.id = :storeId or c.id = :storeId)", "storeId", f.storeId());
         if (f.type() != null)    q.and("d.documentType = :docType", "docType", f.type());
         if (f.status() != null)  q.and("d.status = :docStatus", "docStatus", f.status());
@@ -169,6 +169,7 @@ class StockQueryServiceImpl implements StockQueryApi {
     @Override
     public StockDocumentView document(UUID id) {
         StockDocument d = documents.findDetailedById(id)
+                .filter(x -> guard.inCurrentBranch(x.getStore()))
                 .orElseThrow(() -> new StockNotFoundException("Stock document not found"));
         Store counterpart = d.getCounterpartStore();
         List<DocumentLineView> lines = d.getLines().stream()
@@ -188,8 +189,7 @@ class StockQueryServiceImpl implements StockQueryApi {
     // ---------------- stocktakes ----------------
     @Override
     public PageResult<StocktakeSummary> stocktakes(StocktakeFilter f, int page, int size) {
-        require(f.branchId() != null, "branchId is required");
-        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", f.branchId());
+        JpqlQuery q = new JpqlQuery().and("s.branch.id = :branchId", "branchId", guard.currentBranchId());
         if (f.storeId() != null) q.and("s.id = :storeId", "storeId", f.storeId());
         if (f.status() != null)  q.and("t.status = :status", "status", f.status());
         return fetchPage(STOCKTAKE_SELECT, STOCKTAKE_FROM, q, " order by t.startedAt desc, t.id desc", "t",
@@ -199,6 +199,7 @@ class StockQueryServiceImpl implements StockQueryApi {
     @Override
     public StocktakeView stocktake(UUID id) {
         Stocktake t = stocktakes.findDetailedById(id)
+                .filter(x -> guard.inCurrentBranch(x.getStore()))
                 .orElseThrow(() -> new StockNotFoundException("Stocktake not found"));
         List<StocktakeLineView> lines = t.getLines().stream()
                 .sorted(Comparator.comparing(l -> l.getItem().getName()))

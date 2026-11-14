@@ -4,5 +4,4 @@ import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 
 import java.util.UUID;
 
-public record StocktakeFilter(UUID branchId, UUID storeId, EStocktakeStatus status) {}
-
+public record StocktakeFilter(UUID storeId, EStocktakeStatus status) {}

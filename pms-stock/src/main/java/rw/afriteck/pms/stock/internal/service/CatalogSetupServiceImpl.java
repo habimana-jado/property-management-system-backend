@@ -14,6 +14,9 @@ import rw.afriteck.pms.stock.api.enums.EUnitGroup;
 import rw.afriteck.pms.stock.api.query.ItemSearch;
 import rw.afriteck.pms.stock.api.setup.*;
 import rw.afriteck.pms.stock.api.view.PageResult;
+import rw.afriteck.pms.stock.internal.mapper.CategoryMapper;
+import rw.afriteck.pms.stock.internal.mapper.ItemMapper;
+import rw.afriteck.pms.stock.internal.mapper.UnitMapper;
 import rw.afriteck.pms.stock.internal.model.ItemPackaging;
 import rw.afriteck.pms.stock.internal.model.StockCategory;
 import rw.afriteck.pms.stock.internal.model.StockItem;
@@ -38,6 +41,9 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
     private final StockMovementRepository movements;
     private final StockBalanceRepository balances;
     private final RecipeLineRepository recipeLines;
+    private final UnitMapper unitMapper;
+    private final CategoryMapper categoryMapper;
+    private final ItemMapper itemMapper;
 
     @PersistenceContext
     private EntityManager em;
@@ -45,7 +51,7 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
     // ---------------- units ----------------
     @Override @Transactional(readOnly = true)
     public List<UnitView> units() {
-        return units.findAll(Sort.by("unitGroup", "code")).stream().map(this::view).toList();
+        return units.findAll(Sort.by("unitGroup", "code")).stream().map(unitMapper::toView).toList();
     }
 
     @Override
@@ -61,7 +67,7 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         u.setName(c.name().trim());
         u.setUnitGroup(c.unitGroup());
         u.setFactorToGroupBase(c.factorToGroupBase());
-        return view(units.save(u));
+        return unitMapper.toView(units.save(u));
     }
 
     /** Only the name can change: group and factor are baked into every stored quantity. */
@@ -69,14 +75,14 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
     public UnitView renameUnit(UUID id, String name) {
         UnitOfMeasure u = unit(id);
         u.setName(name.trim());
-        return view(u);
+        return unitMapper.toView(u);
     }
 
     // ---------------- categories ----------------
     @Override @Transactional(readOnly = true)
     public List<CategoryView> categories(boolean includeInactive) {
         return categories.findAll(Sort.by("name")).stream()
-                .filter(c -> includeInactive || c.isActive()).map(this::view).toList();
+                .filter(c -> includeInactive || c.isActive()).map(categoryMapper::toView).toList();
     }
 
     @Override
@@ -87,7 +93,7 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         cat.setCode(code);
         cat.setName(c.name().trim());
         cat.setParent(c.parentId() == null ? null : activeCategory(c.parentId()));
-        return view(categories.save(cat));
+        return categoryMapper.toView(categories.save(cat));
     }
 
     @Override
@@ -99,7 +105,7 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         }
         cat.setName(c.name().trim());
         cat.setParent(parent);
-        return view(cat);
+        return categoryMapper.toView(cat);
     }
 
     @Override
@@ -135,13 +141,12 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         data.setMaxResults(pageSize);
         List<StockItem> found = data.getResultList();
 
-        Map<UUID, List<PackagingView>> packagingByItem = packagings
+        Map<UUID, List<ItemPackaging>> packagingByItem = packagings
                 .findByItemIdIn(found.stream().map(StockItem::getId).toList()).stream()
-                .collect(Collectors.groupingBy(p -> p.getItem().getId(),
-                        Collectors.mapping(this::view, Collectors.toList())));
+                .collect(Collectors.groupingBy(p -> p.getItem().getId()));
 
         return new PageResult<>(found.stream()
-                .map(i -> view(i, packagingByItem.getOrDefault(i.getId(), List.of()))).toList(),
+                .map(i -> itemMapper.toView(i, packagingByItem.getOrDefault(i.getId(), List.of()))).toList(),
                 pageNo, pageSize, total);
     }
 
@@ -162,7 +167,7 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         i.setBaseUnit(unit(c.baseUnitId()));
         i.setItemType(c.itemType());
         i.setReorderLevel(c.reorderLevel());
-        return view(items.save(i), List.of());
+        return itemMapper.toView(items.save(i), List.of());
     }
 
     @Override
@@ -240,24 +245,8 @@ class CatalogSetupServiceImpl implements CatalogSetupApi {
         return items.findById(id).orElseThrow(() -> new StockNotFoundException("Item not found"));
     }
 
-    private UnitView view(UnitOfMeasure u) {
-        return new UnitView(u.getId(), u.getCode(), u.getName(), u.getUnitGroup(), u.getFactorToGroupBase());
-    }
-    private CategoryView view(StockCategory c) {
-        return new CategoryView(c.getId(), c.getCode(), c.getName(),
-                c.getParent() == null ? null : c.getParent().getId(), c.isActive());
-    }
-    private PackagingView view(ItemPackaging p) {
-        return new PackagingView(p.getUnit().getId(), p.getUnit().getCode(), p.getQuantityInBaseUnit());
-    }
     private ItemView viewWithPackagings(StockItem i) {
-        return view(i, packagings.findByItemId(i.getId()).stream().map(this::view).toList());
-    }
-    private ItemView view(StockItem i, List<PackagingView> pk) {
-        return new ItemView(i.getId(), i.getCode(), i.getName(), i.getDescription(),
-                i.getCategory().getId(), i.getCategory().getName(),
-                i.getBaseUnit().getId(), i.getBaseUnit().getCode(), i.getItemType(),
-                i.getReorderLevel(), i.isActive(), pk);
+        return itemMapper.toView(i, packagings.findByItemId(i.getId()));
     }
 
     private static void require(boolean condition, String message) {

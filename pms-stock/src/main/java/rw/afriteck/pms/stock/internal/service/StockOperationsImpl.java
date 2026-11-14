@@ -23,11 +23,14 @@ import rw.afriteck.pms.stock.internal.repository.UnitOfMeasureRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-class StockOperationsImpl  implements StockOperations {
+class StockOperationsImpl implements StockOperations {
 
     private final StoreRepository stores;
     private final StockItemRepository items;
@@ -36,15 +39,13 @@ class StockOperationsImpl  implements StockOperations {
     private final DocumentNumberService numbers;
     private final UnitOfConversionService conversion;
     private final StockLedger ledger;
+    private final BranchGuard guard;
 
-    // Authorization (store-manager role from pms-auth) belongs on the controller or here
-    // via @PreAuthorize; the role name depends on your pms-auth, so it is not hard-coded.
+    // Permissions are checked on the controllers; branch scoping is enforced here through BranchGuard.
 
     @Override
     @Transactional
     public UUID postDocument(SingleStoreDocumentCommand cmd) {
-        Objects.requireNonNull(cmd.performedBy(), "performedBy is required");
-
         Store store = activeStore(cmd.storeId());
         validateStoreForType(cmd.type(), store);
 
@@ -70,7 +71,6 @@ class StockOperationsImpl  implements StockOperations {
     @Override
     @Transactional
     public UUID transfer(TransferCommand cmd) {
-        Objects.requireNonNull(cmd.performedBy(), "performedBy is required");
         Store from = activeStore(cmd.fromStoreId());
         Store to = activeStore(cmd.toStoreId());
         validateTransfer(cmd.purpose(), from, to);
@@ -158,7 +158,8 @@ class StockOperationsImpl  implements StockOperations {
     }
 
     private Store activeStore(UUID id) {
-        Store s = stores.findById(id).orElseThrow(() -> new StockRuleViolationException("Unknown store"));
+        Store s = stores.findById(id).filter(guard::inCurrentBranch)
+                .orElseThrow(() -> new StockRuleViolationException("Unknown store"));
         require(s.isActive(), "Store is inactive: " + s.getName());
         return s;
     }

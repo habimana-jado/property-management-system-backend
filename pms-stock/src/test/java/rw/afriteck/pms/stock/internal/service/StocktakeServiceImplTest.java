@@ -54,6 +54,8 @@ class StocktakeServiceImplTest {
     ItemPackagingRepository packagings;
     @Mock
     StockOperations operations;
+    @Mock
+    BranchGuard guard;
 
     private StocktakeServiceImpl service;
 
@@ -64,7 +66,7 @@ class StocktakeServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new StocktakeServiceImpl(stocktakes, stores, items, units, balances, documents,
-                new UnitOfConversionService(packagings), operations);
+                new UnitOfConversionService(packagings), operations, guard);
 
         store = store();
         pcs = unit("PCS", EUnitGroup.COUNT,  "1");
@@ -73,6 +75,8 @@ class StocktakeServiceImplTest {
         soda  = item("SODA",  pcs);
         water = item("WATER", pcs);
         juice = item("JUICE", pcs);
+
+        lenient().when(guard.inCurrentBranch(any(Store.class))).thenReturn(true);
 
         // save assigns an id, like JPA would on persist
         lenient().when(stocktakes.save(any(Stocktake.class))).thenAnswer(inv -> {
