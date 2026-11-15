@@ -14,11 +14,25 @@ class DocumentNumberService {
 
     private final DocumentSequenceRepository sequences;
 
-    /** Rows are seeded (one per DocumentType) when a branch's MAIN store is created. */
+    /**
+     * Rows are seeded (one per DocumentType) when a branch's MAIN store is created.
+     * Format: &lt;branch prefix&gt;-&lt;type&gt;-&lt;6-digit counter&gt;, e.g. 3F2A91C4-RCV-000001 (19 characters;
+     * StockDocument.documentNo holds 40).
+     */
     String next(HotelBranch branch, EDocumentType type) {
         DocumentSequence seq = sequences.findForUpdate(branch.getId(), type).orElseThrow(
                 () -> new StockRuleViolationException("Document sequence not initialised for " + type));
-        return "%s-%s-%06d".formatted(branch.getId(), prefix(type), seq.next());
+        return "%s-%s-%06d".formatted(branchPrefix(branch), prefix(type), seq.next());
+    }
+
+    /**
+     * Short, stable prefix for a branch. HotelBranch has no code yet, so this uses the last 8 hex digits of its id
+     * (random for any UUID version, unlike the leading digits of a time-ordered UUID). When HotelBranch gets a
+     * code, return it here: this is the only place that decides the prefix.
+     */
+    private static String branchPrefix(HotelBranch branch) {
+        String id = branch.getId().toString().replace("-", "");
+        return id.substring(id.length() - 8).toUpperCase();
     }
 
     private static String prefix(EDocumentType t) {

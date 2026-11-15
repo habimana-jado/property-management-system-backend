@@ -8,6 +8,7 @@ import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.InvalidStateException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
+import rw.afriteck.pms.common.security.CurrentUserService;
 import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.restaurant.dtos.*;
 import rw.afriteck.pms.restaurant.enums.EBillStatus;
@@ -25,6 +26,12 @@ import rw.afriteck.pms.restaurant.repository.TableBillItemRepo;
 import rw.afriteck.pms.restaurant.repository.TableBillRepo;
 import rw.afriteck.pms.restaurant.repository.TableMasterRepo;
 import rw.afriteck.pms.restaurant.service.OrderService;
+import rw.afriteck.pms.stock.api.StockApi;
+import rw.afriteck.pms.stock.api.command.ConsumeForSaleCommand;
+import rw.afriteck.pms.stock.api.command.ReverseConsumptionCommand;
+import rw.afriteck.pms.stock.api.command.SaleLine;
+import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
+import rw.afriteck.pms.stock.api.enums.EOutletType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -48,7 +55,8 @@ public class OrderServiceImpl implements OrderService {
     private final TableBillResponseMapper tableBillResponseMapper;
     private final OrderMapper orderMapper;
     private final PaymentService paymentService;
-//    private final StockApi stockApi;
+    private final StockApi stockApi;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional
@@ -90,19 +98,16 @@ public class OrderServiceImpl implements OrderService {
         List<TableBillItem> allItems = tableBillItemRepo.findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
         recalculateTotalsFromItems(bill, allItems);
 
-//        List<SaleLine> stockLines = saved.stream()
-//                .map(i -> new SaleLine(
-//                        i.getId(),
-//                        i.getMenuMaster().getStockItemId(),
-//                        i.getMenuMaster().getRecipeId(),
-//                        BigDecimal.valueOf(i.getTransactionQuantity()),
-//                        i.getMenuMaster().isTrackInventory()))
-//                .toList();
-//
-//        stockApi.consumeForSale(new ConsumeForSaleCommand(
-//                EOutletType.RESTAURANT, table.getRestaurant().getId(), null,   // adjust to your path to the restaurant
-//                EMovementSourceType.TABLE_BILL_LINE, bill.getId(),
-//                stockLines, currentUsername));
+        List<SaleLine> stockLines = saved.stream()
+                .map(i -> new SaleLine(i.getId(), i.getMenuMaster().getStockItemId(),
+                        i.getMenuMaster().getRecipeId(),
+                        BigDecimal.valueOf(i.getTransactionQuantity()),
+                        i.getMenuMaster().isTrackInventory()))
+                .toList();
+        stockApi.consumeForSale(new ConsumeForSaleCommand(
+                EOutletType.RESTAURANT, table.getRestaurant().getId(), null,
+                EMovementSourceType.TABLE_BILL_LINE, bill.getId(), stockLines,
+                currentUserService.requireCurrentStaffId()));
 
         return orderMapper.toPlacementResponse(bill, table, newItems);
     }
@@ -137,6 +142,9 @@ public class OrderServiceImpl implements OrderService {
         if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
             bill.setBillStatus(EBillStatus.OPEN);
         }
+        stockApi.reverseConsumption(new ReverseConsumptionCommand(
+                EMovementSourceType.TABLE_BILL_LINE, null, item.getId(), request.reason(),
+                currentUserService.requireCurrentStaffId()));
 
         //TODO Do no return TableBillResponse here
         return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems, BigDecimal.ZERO, BigDecimal.ZERO);

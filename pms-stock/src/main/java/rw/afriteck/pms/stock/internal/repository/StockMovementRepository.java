@@ -15,7 +15,7 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, UU
 
     @Query("""
         select m from StockMovement m
-        where m.sourceType = :type and m.sourceId = :sourceId
+        where m.sourceType = :type and (:sourceId is null or m.sourceId = :sourceId)
           and (:lineId is null or m.sourceLineId = :lineId)
           and m.reversalOf is null
           and not exists (select 1 from StockMovement r where r.reversalOf = m)

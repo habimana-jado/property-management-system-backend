@@ -19,6 +19,7 @@ import rw.afriteck.pms.pos.repository.POSProductCategoryRepository;
 import rw.afriteck.pms.pos.repository.POSProductRepository;
 import rw.afriteck.pms.pos.service.POSProductService;
 import rw.afriteck.pms.pos.service.ProductImageStorage;
+import rw.afriteck.pms.stock.api.StockCatalogApi;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,12 +35,14 @@ public class POSProductServiceImpl implements POSProductService {
     private final POSProductCategoryRepository categoryRepo;
     private final POSProductMapper mapper;
     private final ProductImageStorage imageStorage;
+    private final StockCatalogApi stockCatalogApi;
 
     private static final int SEARCH_RESULT_LIMIT = 20;
 
     @Override
     @Transactional
     public POSProductResponse create(CreatePOSProductRequest request) {
+        stockCatalogApi.validateSaleMapping(request.trackInventory(), request.stockItemId(), null, false);
         if (productRepo.existsByHotelBranchIdAndSku(request.hotelBranchId(), request.sku())) {
             throw new DuplicateResourceException("POSProduct with SKU "+ request.sku()+" already exists");
         }

@@ -3,6 +3,7 @@ package rw.afriteck.pms.stock.internal.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.property.model.HotelBranch;
 import rw.afriteck.pms.stock.api.enums.EDocumentType;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
         uniqueConstraints = @UniqueConstraint(columnNames = {"branch_id", "document_type"}))
 @Getter
 @Setter
-public class DocumentSequence {
+public class DocumentSequence extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -28,6 +28,9 @@ public class MenuMaster extends Auditable {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal unitPrice;
 
+    @Column(name = "track_inventory", nullable = false)
+    private boolean trackInventory = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EMenuItemType menuItemType;

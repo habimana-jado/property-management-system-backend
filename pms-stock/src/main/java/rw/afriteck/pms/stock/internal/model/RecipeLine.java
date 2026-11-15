@@ -3,6 +3,7 @@ package rw.afriteck.pms.stock.internal.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import rw.afriteck.pms.common.audit.Auditable;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -12,7 +13,7 @@ import java.util.UUID;
         uniqueConstraints = @UniqueConstraint(columnNames = {"recipe_id", "ingredient_id"}))
 @Getter
 @Setter
-public class RecipeLine {
+public class RecipeLine extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

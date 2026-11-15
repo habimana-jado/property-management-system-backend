@@ -15,6 +15,7 @@ import rw.afriteck.pms.restaurant.model.MenuMaster;
 import rw.afriteck.pms.restaurant.repository.MenuCategoryRepo;
 import rw.afriteck.pms.restaurant.repository.MenuMasterRepo;
 import rw.afriteck.pms.restaurant.service.MenuMasterService;
+import rw.afriteck.pms.stock.api.StockCatalogApi;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -25,12 +26,15 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     private final MenuMasterRepo menuMasterRepo;
     private final MenuMasterMapper menuMasterMapper;
     private final MenuCategoryRepo menuCategoryRepo;
+    private final StockCatalogApi stockCatalogApi;
 
     @Override
     @Transactional
     public MenuMasterResponse register(CreateMenuMasterRequest menuMasterRequest) {
+        stockCatalogApi.validateSaleMapping(menuMasterRequest.trackInventory(), menuMasterRequest.stockItemId(), menuMasterRequest.recipeId(), true);
+
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
-                .orElseThrow(()->new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
 
         MenuMaster menuMaster = menuMasterMapper.toEntity(menuMasterRequest);
         menuMaster.setMenuCategory(menuCategory);
@@ -41,11 +45,12 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     @Override
     @Transactional
     public MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest) {
+        stockCatalogApi.validateSaleMapping(menuMasterRequest.trackInventory(), menuMasterRequest.stockItemId(), menuMasterRequest.recipeId(), true);
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
-                .orElseThrow(()->new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
 
         MenuMaster menuMaster = menuMasterRepo.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("Menu Master", id));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Master", id));
 
         menuMasterMapper.updateEntityFromRequest(menuMasterRequest, menuMaster);
         menuMaster.setMenuCategory(menuCategory);
@@ -61,14 +66,14 @@ public class MenuMasterServiceImpl implements MenuMasterService {
 
     @Override
     public MenuMasterResponse findOne(UUID menuMasterId) {
-        return menuMasterMapper.toResponse(menuMasterRepo.findById(menuMasterId).orElseThrow(()->new ResourceNotFoundException("Menu Master", menuMasterId)));
+        return menuMasterMapper.toResponse(menuMasterRepo.findById(menuMasterId).orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId)));
     }
 
     @Override
     @Transactional
     public MenuMasterResponse updateUnitPrice(UUID menuMasterId, BigDecimal unitPrice) {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
-                .orElseThrow(()->new ResourceNotFoundException("Menu Master", menuMasterId));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
 
         menuMaster.setUnitPrice(unitPrice);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));
@@ -84,7 +89,7 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     @Override
     public MenuMasterResponse activate(UUID menuMasterId) {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
-                .orElseThrow(()->new ResourceNotFoundException("Menu Master", menuMasterId));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
 
         menuMaster.setStatus(ERecordStatus.ACTIVE);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));
@@ -93,7 +98,7 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     @Override
     public MenuMasterResponse deactivate(UUID menuMasterId) {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
-                .orElseThrow(()->new ResourceNotFoundException("Menu Master", menuMasterId));
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
 
         menuMaster.setStatus(ERecordStatus.INACTIVE);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));

@@ -3,6 +3,7 @@ package rw.afriteck.pms.stock.internal.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.stock.api.enums.EUnitGroup;
 
 import java.math.BigDecimal;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Table(name = "stock_unit_of_measure")
 @Getter
 @Setter
-public class UnitOfMeasure {
+public class UnitOfMeasure extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

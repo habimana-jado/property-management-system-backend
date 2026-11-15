@@ -17,6 +17,11 @@ import rw.afriteck.pms.pos.model.*;
 import rw.afriteck.pms.pos.repository.*;
 import rw.afriteck.pms.pos.service.POSSaleService;
 import rw.afriteck.pms.pos.service.SaleNumberGeneratorService;
+import rw.afriteck.pms.stock.api.StockApi;
+import rw.afriteck.pms.stock.api.command.ConsumeForSaleCommand;
+import rw.afriteck.pms.stock.api.command.SaleLine;
+import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
+import rw.afriteck.pms.stock.api.enums.EOutletType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -37,7 +42,7 @@ public class POSSaleServiceImpl implements POSSaleService {
     private final PaymentService paymentService;
     private final POSSaleMapper mapper;
     private final CurrentUserService currentUserService;
-//    private final StockApi stockApi;
+    private final StockApi stockApi;
 
     @Override
     @Transactional
@@ -116,9 +121,6 @@ public class POSSaleServiceImpl implements POSSaleService {
 
         List<POSSaleItem> items = getItems(saleId);
 
-//        stockApi.reverseConsumption(new ReverseConsumptionCommand(
-//                EMovementSourceType.POS_SALE_LINE, saleId, null, "Sale cancelled", currentUsername));
-
         recalculateSaleTotals(sale, items);
         return mapper.toResponse(sale, items);
     }
@@ -151,9 +153,6 @@ public class POSSaleServiceImpl implements POSSaleService {
                     "Completed sales cannot be cancelled — use a return instead");
         }
         sale.setStatus(ESaleStatus.CANCELLED);
-
-//        stockApi.reverseConsumption(new ReverseConsumptionCommand(
-//                EMovementSourceType.POS_SALE_LINE, saleId, null, "Sale cancelled", currentUsername));
 
         return mapper.toResponse(sale, getItems(saleId));
     }
@@ -205,38 +204,14 @@ public class POSSaleServiceImpl implements POSSaleService {
                 continue;
             }
 
-//            POSInventory inventory = inventoryRepo.findForUpdate(product.getId(), sale.getHotelBranchId())
-//                    .orElseThrow(() -> new ResourceNotFoundException("POSInventory", product.getId()));
-//
-//            int newQuantity = inventory.getQuantityOnHand() - item.getQuantity();
-//            if (newQuantity < 0) {
-//                throw new BusinessRuleViolationException("INSUFFICIENT_STOCK",
-//                        "Insufficient stock for product " + product.getId());
-//            }
-//            inventory.setQuantityOnHand(newQuantity);
-//            inventoryRepo.save(inventory);
-//
-//            POSStockMovement movement = new POSStockMovement();
-//            movement.setProduct(product);
-//            movement.setHotelBranchId(sale.getHotelBranchId());
-//            movement.setMovementType(EStockMovementType.SALE);
-//            movement.setQuantity(-item.getQuantity());
-//            movement.setSale(sale);
-//            movementRepo.save(movement);
-
-//            List<SaleLine> stockLines = items().stream()
-//                    .map(i -> new SaleLine(
-//                            i.getId(),                                   // sourceLineId: the sale line's id
-//                            i.getProduct().getStockItemId(),
-//                            null,                                        // POS products map to a stock item, never a recipe
-//                            BigDecimal.valueOf(i.getQuantity()),
-//                            i.getProduct().isTrackInventory()))
-//                    .toList();
-//
-//            stockApi.consumeForSale(new ConsumeForSaleCommand(
-//                    OutletType.POS_TERMINAL, sale.getTerminal().getId(), null,
-//                    MovementSourceType.POS_SALE_LINE, sale.getId(),
-//                    stockLines, currentUsername));
+            List<SaleLine> lines = items.stream()
+                    .map(i -> new SaleLine(i.getId(), i.getProduct().getStockItemId(), null,
+                            BigDecimal.valueOf(i.getQuantity()), i.getProduct().isTrackInventory()))
+                    .toList();
+            stockApi.consumeForSale(new ConsumeForSaleCommand(
+                    EOutletType.POS_TERMINAL, sale.getRegisterSession().getTerminal().getId(), null,
+                    EMovementSourceType.POS_SALE_LINE, sale.getId(), lines,
+                    currentUserService.requireCurrentStaffId()));
         }
     }
 

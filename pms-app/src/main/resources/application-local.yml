@@ -20,6 +20,10 @@ logging:
     org.hibernate.stat: DEBUG
     org.hibernate.SQL: DEBUG
 
+PMS_IT_DB_URL: jdbc:postgresql://localhost:5432/pms_stock_test
+PMS_IT_DB_USER: postgres
+PMS_IT_DB_PASSWORD: root
+
 pms:
   pos:
     upload:

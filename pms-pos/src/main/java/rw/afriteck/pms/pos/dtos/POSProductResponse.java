@@ -16,6 +16,7 @@ public record POSProductResponse(
         String imageUrl,
         BigDecimal unitPrice,
         boolean trackInventory,
-        ERecordStatus status
+        ERecordStatus status,
+        UUID stockItemId
 ) {
 }

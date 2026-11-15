@@ -33,9 +33,12 @@ class StockApiImpl implements StockApi {
     private final RecipeRepository recipes;
     private final UnitOfConversionService conversion;
 
-    private record Requirement(StockItem item, BigDecimal quantity, UUID sourceLineId) {}
+    private record Requirement(StockItem item, BigDecimal quantity, UUID sourceLineId) {
+    }
 
-    private record Catalog(Map<UUID, StockItem> items, Map<UUID, Recipe> recipes) {}
+    private record Catalog(Map<UUID, StockItem> items, Map<UUID, Recipe> recipes) {
+    }
+
     @Override
     @Transactional
     public List<UUID> consumeForSale(ConsumeForSaleCommand cmd) {
@@ -126,6 +129,9 @@ class StockApiImpl implements StockApi {
     @Override
     @Transactional
     public int reverseConsumption(ReverseConsumptionCommand cmd) {
+        if (cmd.sourceId() == null && cmd.sourceLineId() == null)
+            throw new StockRuleViolationException("sourceId or sourceLineId is required");
+
         List<StockMovement> originals =
                 movements.findReversible(cmd.sourceType(), cmd.sourceId(), cmd.sourceLineId());
         if (originals.isEmpty()) return 0;

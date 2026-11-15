@@ -11,6 +11,7 @@ public record UpdatePOSProductRequest(
         @NotNull UUID categoryId,
         @NotBlank String name,
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal unitPrice,
-        boolean trackInventory
+        boolean trackInventory,
+        UUID stockItemId
 ) {
 }

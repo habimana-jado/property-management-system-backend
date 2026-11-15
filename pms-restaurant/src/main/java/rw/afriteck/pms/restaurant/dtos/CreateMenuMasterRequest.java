@@ -13,6 +13,9 @@ public record CreateMenuMasterRequest(
         @NotNull BigDecimal unitPrice,
         @NotNull EMenuItemType menuItemType,
         @NotNull EPackageType packageType,
-        @NotNull UUID menuCategoryId
+        @NotNull UUID menuCategoryId,
+        UUID stockItemId,
+        UUID recipeId,
+        boolean trackInventory
 ) {
 }

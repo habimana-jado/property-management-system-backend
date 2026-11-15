@@ -14,6 +14,9 @@ public record MenuMasterResponse(
         EMenuItemType menuItemType,
         EPackageType packageType,
         ERecordStatus status,
-        UUID menuCategoryId
+        UUID menuCategoryId,
+        UUID stockItemId,
+        UUID recipeId,
+        boolean trackInventory
 ) {
 }

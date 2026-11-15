@@ -3,6 +3,7 @@ package rw.afriteck.pms.stock.internal.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import rw.afriteck.pms.common.audit.Auditable;
 
 import java.util.UUID;
 
@@ -10,7 +11,7 @@ import java.util.UUID;
 @Table(name = "stock_category")
 @Getter
 @Setter
-public class StockCategory {
+public class StockCategory extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
