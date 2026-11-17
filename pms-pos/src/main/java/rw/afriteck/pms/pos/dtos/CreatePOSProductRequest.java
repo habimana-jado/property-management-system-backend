@@ -15,6 +15,6 @@ public record CreatePOSProductRequest(
         String barcode,
         @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal unitPrice,
         @NotNull boolean trackInventory,
-        @NotNull UUID stockItemId
+        UUID stockItemId                  // the stock item this product sells; required when trackInventory is true
 ) {
 }
