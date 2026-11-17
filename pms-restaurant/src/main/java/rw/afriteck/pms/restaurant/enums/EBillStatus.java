@@ -6,5 +6,6 @@ public enum EBillStatus {
     PARTIALLY_PAID,
     PAID,
     COMPED, //no payment, business-absorbed cost
-    CANCELLED
+    CANCELLED,
+    ON_CREDIT
 }

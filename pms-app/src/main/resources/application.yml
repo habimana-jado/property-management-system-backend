@@ -20,3 +20,5 @@ app:
     secret: "@SecurelyAndRandomlyGeneratedSecretKeyOfAtLeast32BytesLength@!"
     access-token-validity-ms: 900000
     refresh-token-validity-ms: 604800000
+  phone:
+    default-country-code: 250

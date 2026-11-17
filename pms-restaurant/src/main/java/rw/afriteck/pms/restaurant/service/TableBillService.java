@@ -1,9 +1,7 @@
 package rw.afriteck.pms.restaurant.service;
 
-import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
-import rw.afriteck.pms.restaurant.dtos.BillSnapshotResponse;
-import rw.afriteck.pms.restaurant.dtos.CompBillRequest;
-import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
+import org.springframework.transaction.annotation.Transactional;
+import rw.afriteck.pms.restaurant.dtos.*;
 
 import java.util.UUID;
 
@@ -15,4 +13,6 @@ public interface TableBillService {
     TableBillResponse recordPayment(UUID tableBillId, RecordPaymentRequest request);
 
     TableBillResponse compBill(UUID tableBillId, CompBillRequest request);
+
+    TableBillResponse closeBillOnCredit(UUID tableBillId, CloseOnCreditRequest request);
 }

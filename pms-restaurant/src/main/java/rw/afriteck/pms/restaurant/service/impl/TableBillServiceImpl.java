@@ -5,16 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
+import rw.afriteck.pms.credit.dtos.GrantCreditRequest;
+import rw.afriteck.pms.credit.service.CreditService;
 import rw.afriteck.pms.payment.dtos.PaymentResult;
 import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
 import rw.afriteck.pms.common.enums.EPayableType;
-import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
+import rw.afriteck.pms.restaurant.dtos.*;
 import rw.afriteck.pms.payment.mapper.PaymentMapper;
 import rw.afriteck.pms.payment.service.impl.PaymentService;
-import rw.afriteck.pms.restaurant.dtos.BillSnapshotResponse;
-import rw.afriteck.pms.restaurant.dtos.CombinedBillLineResponse;
-import rw.afriteck.pms.restaurant.dtos.CompBillRequest;
-import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
 import rw.afriteck.pms.restaurant.enums.EBillStatus;
 import rw.afriteck.pms.restaurant.enums.ETableBillItemStatus;
 import rw.afriteck.pms.restaurant.enums.ETableStatus;
@@ -43,6 +41,7 @@ public class TableBillServiceImpl implements TableBillService {
     private final BillSnapshotMapper billSnapshotMapper;
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
+    private final CreditService creditService;
 
     @Override
     @Transactional
@@ -154,6 +153,43 @@ public class TableBillServiceImpl implements TableBillService {
         bill.getTableMaster().setTableStatus(ETableStatus.AVAILABLE);
 
         return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), activeItems, BigDecimal.ZERO, bill.getTotalAmount());
+    }
+
+    @Transactional
+    @Override
+    public TableBillResponse closeBillOnCredit(UUID tableBillId, CloseOnCreditRequest request) {
+
+        TableBill bill = tableBillRepo.findByIdForUpdate(tableBillId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bill", tableBillId));
+
+        if (!List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED, EBillStatus.PARTIALLY_PAID)
+                .contains(bill.getBillStatus())) {
+            throw new BusinessRuleViolationException("INVALID_BILL_STATE", "Bill cannot be closed on credit");
+        }
+
+        BigDecimal alreadyPaid = paymentService.sumPaidAmount(bill.getId(), EPayableType.TABLE_BILL);
+        BigDecimal remaining = bill.getTotalAmount().subtract(alreadyPaid);
+
+        if (remaining.signum() <= 0) {
+            throw new BusinessRuleViolationException("NOTHING_TO_CREDIT", "Bill has no remaining balance");
+        }
+
+        creditService.grantCredit(new GrantCreditRequest(
+                request.customerId(),
+                EPayableType.TABLE_BILL,
+                bill.getId(),
+                bill.getBillNo(),
+                remaining,               // only the unpaid remainder goes on credit
+                request.dueDate()
+        ));
+
+        bill.setBillStatus(EBillStatus.ON_CREDIT);
+        bill.getTableMaster().setTableStatus(ETableStatus.AVAILABLE);
+
+        List<TableBillItem> items = tableBillItemRepo
+                .findByTableBillIdAndStatus(bill.getId(), ETableBillItemStatus.ACTIVE);
+
+        return tableBillResponseMapper.toTableBillResponse(bill, bill.getTableMaster(), items, BigDecimal.ZERO, bill.getTotalAmount());
     }
 
     public List<CombinedBillLineResponse> combineForBillSnapshot(List<TableBillItem> items) {
