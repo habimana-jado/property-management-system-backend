@@ -175,6 +175,7 @@ public class TableBillServiceImpl implements TableBillService {
         }
 
         creditService.grantCredit(new GrantCreditRequest(
+                bill.getTableMaster().getRestaurant().getHotelBranch().getId(),
                 request.customerId(),
                 EPayableType.TABLE_BILL,
                 bill.getId(),

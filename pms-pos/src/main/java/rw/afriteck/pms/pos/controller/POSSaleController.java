@@ -58,6 +58,13 @@ public class POSSaleController {
         return saleService.complete(saleId, request);
     }
 
+    @PostMapping("/{saleId}/complete-on-credit")
+    // @PreAuthorize: CREDIT_GRANT
+    public POSCreditSaleResponse completeOnCredit(@PathVariable UUID saleId,
+                                                  @Valid @RequestBody CompleteSaleOnCreditRequest request) {
+        return saleService.completeOnCredit(saleId, request);
+    }
+
     @GetMapping("/{saleId}")
     public POSSaleResponse findById(@PathVariable UUID saleId) {
         return saleService.findById(saleId);

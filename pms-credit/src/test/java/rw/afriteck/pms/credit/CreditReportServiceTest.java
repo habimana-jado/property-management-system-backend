@@ -52,7 +52,7 @@ class CreditReportServiceTest {
         Receivable b1 = CreditTestData.receivable(b, "30000", "0",
                 EReceivableStatus.OUTSTANDING, AS_OF.minusDays(100), Instant.now());
 
-        when(receivableRepository.findActiveByHotelWithCustomer(eq(hotelId), any()))
+        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any()))
                 .thenReturn(List.of(a1, a2, b1));
 
         AgingReportResponse report = reportService.agingReport(hotelId, AS_OF);
@@ -81,13 +81,13 @@ class CreditReportServiceTest {
 
     @Test
     void agingReport_onlyRequestsActiveDebts() {
-        when(receivableRepository.findActiveByHotelWithCustomer(eq(hotelId), any())).thenReturn(List.of());
+        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any())).thenReturn(List.of());
 
         reportService.agingReport(hotelId, AS_OF);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<EReceivableStatus>> captor = ArgumentCaptor.forClass(List.class);
-        verify(receivableRepository).findActiveByHotelWithCustomer(eq(hotelId), captor.capture());
+        verify(receivableRepository).findActiveByHotelBranchWithCustomer(eq(hotelId), captor.capture());
 
         // guards against someone adding SETTLED or WRITTEN_OFF to the report by accident
         assertThat(captor.getValue())
@@ -96,7 +96,7 @@ class CreditReportServiceTest {
 
     @Test
     void agingReport_returnsZeroedTotalsWhenNothingIsOwed() {
-        when(receivableRepository.findActiveByHotelWithCustomer(eq(hotelId), any())).thenReturn(List.of());
+        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any())).thenReturn(List.of());
 
         AgingReportResponse report = reportService.agingReport(hotelId, AS_OF);
 

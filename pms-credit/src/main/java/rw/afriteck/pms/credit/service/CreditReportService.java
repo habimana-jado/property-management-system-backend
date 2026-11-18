@@ -28,7 +28,7 @@ public class CreditReportService {
     @Transactional(readOnly = true)
     public AgingReportResponse agingReport(UUID hotelId, LocalDate asOf) {
 
-        List<Receivable> active = receivableRepository.findActiveByHotelWithCustomer(hotelId, ACTIVE);
+        List<Receivable> active = receivableRepository.findActiveByHotelBranchWithCustomer(hotelId, ACTIVE);
 
         Map<UUID, CreditCustomer> customers = new HashMap<>();
         Map<UUID, Map<EAgingBucket, BigDecimal>> perCustomer = new HashMap<>();

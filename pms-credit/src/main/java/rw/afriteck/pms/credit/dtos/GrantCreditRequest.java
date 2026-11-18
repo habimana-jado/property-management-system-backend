@@ -9,8 +9,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-// internal contract: called by other modules, not exposed over REST
 public record GrantCreditRequest(
+        @NotNull UUID hotelBranchId,
         @NotNull UUID customerId,
         @NotNull EPayableType sourceType,
         @NotNull UUID sourceId,

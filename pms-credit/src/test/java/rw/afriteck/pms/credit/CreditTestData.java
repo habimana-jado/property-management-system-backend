@@ -17,7 +17,7 @@ final class CreditTestData {
     static CreditCustomer customer(UUID hotelId, String creditLimit) {
         CreditCustomer c = new CreditCustomer();
         c.setId(UUID.randomUUID()); // @GeneratedValue doesn't run in unit tests
-        c.setHotelId(hotelId);
+        c.setHotelBranchId(hotelId);
         c.setFullName("Test Customer");
         c.setPhoneNumber("+250788000001");
         c.setCreditAllowed(true);

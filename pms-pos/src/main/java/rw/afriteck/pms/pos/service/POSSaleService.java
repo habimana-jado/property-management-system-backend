@@ -1,5 +1,6 @@
 package rw.afriteck.pms.pos.service;
 
+import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.pos.dtos.*;
 
 import java.util.UUID;
@@ -21,6 +22,9 @@ public interface POSSaleService {
     POSSaleResponse cancel(UUID saleId);
 
     POSSaleResponse complete(UUID saleId, CompleteSaleRequest request);
+
+    @Transactional
+    POSCreditSaleResponse completeOnCredit(UUID saleId, CompleteSaleOnCreditRequest request);
 
     POSSaleResponse findById(UUID saleId);
 }

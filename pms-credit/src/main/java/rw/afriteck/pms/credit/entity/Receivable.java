@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.credit.enums.EReceivableStatus;
 
@@ -19,7 +20,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Receivable {
+public class Receivable extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

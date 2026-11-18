@@ -9,7 +9,7 @@ public class PhoneNumberNormalizer {
 
     private final String defaultCountryCode; // e.g. "250", from configuration
 
-    public PhoneNumberNormalizer(@Value("${pms.phone.default-country-code}") String defaultCountryCode) {
+    public PhoneNumberNormalizer(@Value("${app.phone.default-country-code}") String defaultCountryCode) {
         this.defaultCountryCode = defaultCountryCode;
     }
 

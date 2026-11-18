@@ -1,4 +1,4 @@
-package rw.afriteck.pms.config;
+package rw.afriteck.pms.architecture;
 
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
@@ -17,4 +17,16 @@ class StockBoundaryTest {
     static final ArchRule api_does_not_depend_on_internals =
             noClasses().that().resideInAPackage("rw.afriteck.pms.stock.api..")
                     .should().dependOnClassesThat().resideInAPackage("rw.afriteck.pms.stock.internal..");
+
+    @ArchTest
+    static final ArchRule payment_must_not_depend_on_domain_modules =
+            noClasses().that().resideInAPackage("rw.afriteck.pms.payment..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "rw.afriteck.pms.restaurant..", "rw.afriteck.pms.pos..", "rw.afriteck.pms.credit..");
+
+    @ArchTest
+    static final ArchRule credit_must_not_depend_on_sales_modules =
+            noClasses().that().resideInAPackage("rw.afriteck.pms.credit..")
+                    .should().dependOnClassesThat().resideInAnyPackage(
+                            "rw.afriteck.pms.restaurant..", "rw.afriteck.pms.pos..");
 }

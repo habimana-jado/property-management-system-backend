@@ -6,5 +6,6 @@ public enum ESaleStatus {
     COMPLETED,
     CANCELLED,
     PARTIALLY_REFUNDED,
-    REFUNDED
+    REFUNDED,
+    ON_CREDIT   // closed with the unpaid remainder moved to a receivable
 }

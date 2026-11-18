@@ -12,9 +12,9 @@ import java.util.UUID;
 
 public interface CreditCustomerRepository extends JpaRepository<CreditCustomer, UUID> {
 
-    Optional<CreditCustomer> findByHotelIdAndPhoneNumber(UUID hotelId, String phoneNumber);
+    Optional<CreditCustomer> findByHotelBranchIdAndPhoneNumber(UUID hotelBranchId, String phoneNumber);
 
-    boolean existsByHotelIdAndPhoneNumber(UUID hotelId, String phoneNumber);
+    boolean existsByHotelBranchIdAndPhoneNumber(UUID hotelBranchId, String phoneNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM CreditCustomer c WHERE c.id = :id")

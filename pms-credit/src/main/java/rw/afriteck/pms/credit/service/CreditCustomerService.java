@@ -33,7 +33,7 @@ public class CreditCustomerService {
     public CreditCustomerResponse create(CreateCreditCustomerRequest request) {
         String phone = phoneNormalizer.normalize(request.phoneNumber());
 
-        if (customerRepository.existsByHotelIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phone)) {
+        if (customerRepository.existsByHotelBranchIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phone)) {
             throw new BusinessRuleViolationException("DUPLICATE_PHONE", "A customer with this phone number already exists");
         }
 
@@ -42,6 +42,7 @@ public class CreditCustomerService {
         customer.setPhoneNumber(phone);
         customer.setCreditLimit(request.creditLimit());
         customer.setCreditAllowed(request.creditLimit().signum() > 0);
+        customer.setHotelBranchId(currentUserService.requireCurrentHotelBranchId());
         customerRepository.save(customer);
 
         return toResponse(customer);
@@ -49,7 +50,7 @@ public class CreditCustomerService {
 
     @Transactional(readOnly = true)
     public CreditCustomerResponse findByPhone(String rawPhone) {
-        CreditCustomer customer = customerRepository.findByHotelIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phoneNormalizer.normalize(rawPhone))
+        CreditCustomer customer = customerRepository.findByHotelBranchIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phoneNormalizer.normalize(rawPhone))
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", rawPhone));
         return toResponse(customer);
     }
