@@ -9,5 +9,7 @@ import rw.afriteck.pms.property.model.HotelBranch;
 import java.util.UUID;
 
 public interface HotelBranchRepo extends JpaRepository<HotelBranch, UUID> {
-    Page<HotelBranch> findByHotelIdAndStatus(UUID hotelId, ERecordStatus status, Pageable pageable);
+    Page<HotelBranch> findByStatus(ERecordStatus status, Pageable pageable);
+
+    boolean existsByIdAndHotelId(UUID id, UUID hotelId);
 }

@@ -20,6 +20,8 @@ import rw.afriteck.pms.auth.repository.RoleRepo;
 import rw.afriteck.pms.auth.repository.StaffRepo;
 import rw.afriteck.pms.auth.repository.UserRepo;
 import rw.afriteck.pms.auth.service.StaffService;
+import rw.afriteck.pms.common.tenant.HotelDirectory;
+import rw.afriteck.pms.common.tenant.TenantContext;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -34,15 +36,19 @@ public class StaffServiceImpl implements StaffService {
     private final RoleRepo roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final StaffMapper staffMapper;
+    private final HotelDirectory hotelDirectory;
 
     @Override
     @Transactional
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public StaffResponse registerStaff(StaffRegistrationRequest request) {
+        UUID hotelId = TenantContext.require();
+        requireBranchInHotel(request.hotelBranchId(), hotelId);
+
         if (userRepository.findByUsername(request.username()).isPresent()) {
             throw new DuplicateResourceException("Username already taken: " + request.username());
         }
-        Set<Role> roles = resolveRoles(request.roleIds());
+        Set<Role> roles = resolveRoles(request.roleIds(), hotelId);
 
         Staff staff = new Staff();
         staff.setFirstName(request.firstName());
@@ -51,6 +57,7 @@ public class StaffServiceImpl implements StaffService {
         staff.setEmail(request.email());
         staff.setPosition(request.position());
         staff.setHireDate(request.hireDate() != null ? request.hireDate() : LocalDate.now());
+        staff.setHotelId(hotelId);
         staff.setHotelBranchId(request.hotelBranchId());
 
         Staff savedStaff = staffRepository.save(staff);
@@ -69,6 +76,10 @@ public class StaffServiceImpl implements StaffService {
     @Transactional
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public StaffResponse updateProfile(UUID staffId, UpdateStaffProfileRequest request) {
+        if (request.hotelBranchId() != null) {
+            requireBranchInHotel(request.hotelBranchId(), TenantContext.require());
+        }
+
         Staff staff = findStaffOrThrow(staffId);
 
         staff.setFirstName(request.firstName());
@@ -97,7 +108,9 @@ public class StaffServiceImpl implements StaffService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<StaffResponse> findByHotelBranch(UUID hotelBranchId, Pageable pageable) {
-        Page<Staff> staffList = staffRepository.findByHotelBranchId(hotelBranchId, pageable);
+        Page<Staff> staffList = staffRepository.findByHotelIdAndHotelBranchId(
+                TenantContext.require(), hotelBranchId, pageable);
+
         if (staffList.isEmpty()) {
             return List.of();
         }
@@ -111,13 +124,19 @@ public class StaffServiceImpl implements StaffService {
                 .toList();
     }
 
+    private void requireBranchInHotel(UUID branchId, UUID hotelId) {
+        if (!hotelDirectory.branchBelongsToHotel(branchId, hotelId)) {
+            throw new ResourceNotFoundException("Hotel Branch", branchId);
+        }
+    }
+
     private Staff findStaffOrThrow(UUID staffId) {
-        return staffRepository.findById(staffId)
+        return staffRepository.findByIdAndHotelId(staffId, TenantContext.require())
                 .orElseThrow(() -> new ResourceNotFoundException("Staff not found", staffId));
     }
 
-    private Set<Role> resolveRoles(Set<UUID> roleIds) {
-        List<Role> found = roleRepository.findAllById(roleIds);
+    private Set<Role> resolveRoles(Set<UUID> roleIds, UUID hotelId) {
+        List<Role> found = roleRepository.findAllByIdInAndHotelId(roleIds, hotelId);
         if (found.size() != roleIds.size()) {
             throw new ResourceNotFoundException("One or more role IDs are invalid", roleIds);
         }

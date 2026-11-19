@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import rw.afriteck.pms.common.tenant.TenantContext;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -27,19 +28,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                     FilterChain filterChain) throws ServletException, IOException {
+                                    FilterChain filterChain) throws ServletException, IOException {
+        try {
+            String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+            if (header != null && header.startsWith("Bearer ")) {
+                String token = header.substring(7);
+                if (tokenProvider.isValid(token)) {
+                    Claims claims = tokenProvider.parseClaims(token);
+                    if ("access".equals(claims.get("type", String.class))) {
+                        Authentication authentication = buildAuthentication(claims);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
-            if (tokenProvider.isValid(token)) {
-                Claims claims = tokenProvider.parseClaims(token);
-                if ("access".equals(claims.get("type", String.class))) {
-                    SecurityContextHolder.getContext().setAuthentication(buildAuthentication(claims));
+                        StaffPrincipal principal = (StaffPrincipal) authentication.getPrincipal();
+                        if (principal.hotelId() != null) {
+                            TenantContext.set(principal.hotelId());
+                        }
+                    }
                 }
             }
+            filterChain.doFilter(request, response);
+        } finally {
+            TenantContext.clear();
         }
-        filterChain.doFilter(request, response);
     }
 
     @SuppressWarnings("unchecked")
@@ -56,13 +66,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String hotelBranchIdStr = claims.get("hotelBranchId", String.class);
         UUID hotelBranchId = hotelBranchIdStr != null ? UUID.fromString(hotelBranchIdStr) : null;
+        String hotelIdStr = claims.get("hotelId", String.class);
+        UUID hotelId = hotelIdStr != null ? UUID.fromString(hotelIdStr) : null;
 
-        StaffPrincipal principal = new StaffPrincipal(
-                userId,
-                staffId,
-                claims.get("username", String.class),
-                hotelBranchId
-        );
+        StaffPrincipal principal = new StaffPrincipal(userId, staffId,
+                claims.get("username", String.class), hotelId, hotelBranchId);
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
     }

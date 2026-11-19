@@ -10,7 +10,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles")
+@Table(name = "roles", uniqueConstraints = @UniqueConstraint(
+        name = "uk_role_hotel_name", columnNames = {"hotel_id", "name"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,7 +22,7 @@ public class Role {
     private UUID id;
 
     // e.g. CASHIER, WAITER, ADMIN
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String name;
 
     @Column(length = 255)
@@ -38,4 +39,8 @@ public class Role {
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     private Set<Permission> permissions = new HashSet<>();
+
+
+    @Column(name = "hotel_id", nullable = false, updatable = false)
+    private UUID hotelId;
 }

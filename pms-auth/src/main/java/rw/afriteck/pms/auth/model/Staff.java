@@ -39,4 +39,7 @@ public class Staff extends Auditable {
     private LocalDate hireDate;
 
     private UUID hotelBranchId;
+
+    @Column(name = "hotel_id", nullable = false, updatable = false)
+    private UUID hotelId;
 }

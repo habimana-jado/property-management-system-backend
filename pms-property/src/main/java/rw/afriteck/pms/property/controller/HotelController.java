@@ -46,6 +46,16 @@ public class HotelController {
         return ResponseEntity.created(location).body(hotel);
     }
 
+    @GetMapping("/current")
+    public ResponseEntity<HotelResponse> current() {
+        return ResponseEntity.ok(hotelService.findCurrent());
+    }
+
+    @PutMapping("/current")
+    public ResponseEntity<HotelResponse> updateCurrent(@Valid @RequestBody CreateHotelRequest request) {
+        return ResponseEntity.ok(hotelService.updateCurrent(request));
+    }
+
     @GetMapping
     public ResponseEntity<Page<HotelResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(hotelService.findAll(pageable));

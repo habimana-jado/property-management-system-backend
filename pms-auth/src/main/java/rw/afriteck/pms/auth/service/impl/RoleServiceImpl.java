@@ -17,6 +17,7 @@ import rw.afriteck.pms.auth.model.Role;
 import rw.afriteck.pms.auth.repository.PermissionRepo;
 import rw.afriteck.pms.auth.repository.RoleRepo;
 import rw.afriteck.pms.auth.service.RoleService;
+import rw.afriteck.pms.common.tenant.TenantContext;
 
 import java.util.HashSet;
 import java.util.List;
@@ -35,13 +36,16 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public RoleResponse createRole(CreateRoleRequest request) {
-        if (roleRepository.existsByName(request.name())) {
+        UUID hotelId = TenantContext.require();
+        if (roleRepository.existsByHotelIdAndName(hotelId, request.name())) {
             throw new DuplicateResourceException("Role already exists: " + request.name());
         }
+
         Role role = new Role();
         role.setName(request.name());
         role.setDescription(request.description());
         role.setPermissions(resolvePermissions(request.permissionCodes()));
+        role.setHotelId(hotelId);
 
         Role saved = roleRepository.save(role);
         return roleMapper.toResponse(saved);
@@ -61,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<RoleResponse> getAllRoles() {
-        return roleRepository.findAll().stream().map(roleMapper::toResponse).toList();
+        return roleRepository.findByHotelId(TenantContext.require()).stream().map(roleMapper::toResponse).toList();
     }
 
     @Override
@@ -86,16 +90,17 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<PermissionResponse> getAllPermissions() {
-        return permissionRepository.findAll().stream().map(roleMapper::toResponse).toList();
+        return permissionRepository.findByPlatformOnlyFalse().stream().map(roleMapper::toResponse).toList();
     }
 
     private Role findRoleOrThrow(UUID roleId) {
-        return roleRepository.findById(roleId)
+        return roleRepository.findByIdAndHotelId(roleId, TenantContext.require())
                 .orElseThrow(() -> new ResourceNotFoundException("Role not found", roleId));
     }
 
     private Set<Permission> resolvePermissions(Set<String> codes) {
-        List<Permission> found = permissionRepository.findByCodeIn(codes);
+        List<Permission> found = permissionRepository.findByCodeInAndPlatformOnlyFalse(codes);
+
         if (found.size() != codes.size()) {
             throw new ResourceNotFoundException("One or more permission codes are invalid", codes);
         }

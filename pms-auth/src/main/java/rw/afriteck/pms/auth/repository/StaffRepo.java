@@ -9,6 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface StaffRepo extends JpaRepository<Staff, UUID> {
-    Page<Staff> findByHotelBranchId(UUID hotelBranchId, Pageable pageable);
+    Optional<Staff> findByIdAndHotelId(UUID id, UUID hotelId);
+
+    Page<Staff> findByHotelIdAndHotelBranchId(UUID hotelId, UUID hotelBranchId, Pageable pageable);
+
     Optional<Staff> findByEmail(String email);
 }

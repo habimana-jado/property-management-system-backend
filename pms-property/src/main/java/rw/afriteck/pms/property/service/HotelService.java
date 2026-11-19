@@ -13,6 +13,10 @@ public interface HotelService {
 
     HotelResponse update(UUID hotelId, CreateHotelRequest hotelRequest);
 
+    HotelResponse findCurrent();
+
+    HotelResponse updateCurrent(CreateHotelRequest request);
+
     Page<HotelResponse> findAll(Pageable pageable);
 
     HotelResponse findOne(UUID hotelId);

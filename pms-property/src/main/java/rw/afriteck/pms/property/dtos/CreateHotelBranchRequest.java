@@ -9,7 +9,6 @@ public record CreateHotelBranchRequest(
     @NotBlank String name,
     @NotBlank String location,
     String contactNumber1,
-    String contactNumber2,
-    @NotNull UUID hotelId
+    String contactNumber2
 ) {
 }

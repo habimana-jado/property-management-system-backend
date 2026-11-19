@@ -10,6 +10,7 @@ import rw.afriteck.pms.auth.dtos.LoginRequest;
 import rw.afriteck.pms.auth.dtos.LoginResponse;
 import rw.afriteck.pms.auth.dtos.RefreshTokenRequest;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
+import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.auth.model.Permission;
 import rw.afriteck.pms.auth.model.Role;
@@ -17,6 +18,7 @@ import rw.afriteck.pms.auth.model.User;
 import rw.afriteck.pms.auth.repository.UserRepo;
 import rw.afriteck.pms.auth.security.JwtTokenProvider;
 import rw.afriteck.pms.auth.service.AuthService;
+import rw.afriteck.pms.common.tenant.HotelDirectory;
 
 import java.time.Instant;
 import java.util.Set;
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepo userRepository;
     private final JwtTokenProvider tokenProvider;
+    private final HotelDirectory hotelDirectory;
 
     @Override
     @Transactional
@@ -43,6 +46,8 @@ public class AuthServiceImpl implements AuthService {
 
         User user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found", request.username()));
+
+        requireActiveHotel(user.getStaff().getHotelId());
 
         user.setLastLoginAt(Instant.now()); // dirty checking persists this
 
@@ -68,6 +73,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessRuleViolationException("ACCOUNT_LOCKED", "Account is disabled or locked");
         }
 
+        requireActiveHotel(user.getStaff().getHotelId());
+
         return issueTokens(user);
     }
 
@@ -81,11 +88,23 @@ public class AuthServiceImpl implements AuthService {
                 .map(Permission::getCode)
                 .collect(Collectors.toSet());
 
+        UUID hotelId = user.getStaff().getHotelId();
         String accessToken = tokenProvider.generateAccessToken(
-                user.getId(), user.getStaff().getId(), user.getUsername(), user.getStaff().getHotelBranchId(),
-                roleNames, permissionCodes);
+                user.getId(), user.getStaff().getId(), user.getUsername(), hotelId,
+                user.getStaff().getHotelBranchId(), roleNames, permissionCodes);
+
         String refreshToken = tokenProvider.generateRefreshToken(user.getId());
 
         return new LoginResponse(accessToken, refreshToken, tokenProvider.getAccessTokenValidityMs() / 1000);
     }
+
+    private void requireActiveHotel(UUID hotelId) {
+        if (hotelId == null) {
+            throw new ForbiddenException("NO_HOTEL", "This account is not attached to a hotel");
+        }
+        if (!hotelDirectory.isHotelActive(hotelId)) {
+            throw new ForbiddenException("HOTEL_SUSPENDED", "This hotel's account is not active");
+        }
+    }
+
 }

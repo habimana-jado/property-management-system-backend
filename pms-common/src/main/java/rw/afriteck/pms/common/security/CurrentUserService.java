@@ -7,5 +7,7 @@ public interface CurrentUserService {
 
     UUID requireCurrentUserId();
 
+    UUID requireCurrentHotelId();
+
     UUID requireCurrentHotelBranchId();
 }

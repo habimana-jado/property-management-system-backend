@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.enums.ERecordStatus;
+import rw.afriteck.pms.common.tenant.TenantOwned;
 
 import java.util.UUID;
 
@@ -17,7 +18,7 @@ import java.util.UUID;
                 name = "uk_hotel_branch_hotel_name",
                 columnNames = {"hotel_id", "name"}
         ))
-public class HotelBranch {
+public class HotelBranch extends TenantOwned {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -31,7 +32,7 @@ public class HotelBranch {
     @Column(nullable = false)
     private ERecordStatus status;
 
-    @ManyToOne
-    @JoinColumn(name = "hotel_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "hotel_id", insertable = false, updatable = false)
     private Hotel hotel;
 }

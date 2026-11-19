@@ -31,13 +31,14 @@ public class JwtTokenProvider {
         this.refreshTokenValidityMs = refreshTokenValidityMs;
     }
 
-    public String generateAccessToken(UUID userId, UUID staffId, String username, UUID hotelBranchId,
+    public String generateAccessToken(UUID userId, UUID staffId, String username, UUID hotelId,UUID hotelBranchId,
                                       Set<String> roleNames, Set<String> permissionCodes) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("staffId", staffId)
                 .claim("username", username)
+                .claim("hotelId", hotelId)
                 .claim("hotelBranchId", hotelBranchId)
                 .claim("roles", roleNames)
                 .claim("authorities", permissionCodes)

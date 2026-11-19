@@ -8,6 +8,7 @@ spring:
           batch_size: 50
         order_inserts: true
         order_updates: true
+        tenant_identifier_resolver: rw.afriteck.pms.common.tenant.HotelTenantIdentifierResolver
   profiles:
     active: local
   servlet:

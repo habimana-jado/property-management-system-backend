@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.property.dtos.CreateHotelBranchRequest;
 import rw.afriteck.pms.property.dtos.HotelBranchResponse;
 import rw.afriteck.pms.property.mapper.HotelBranchMapper;
@@ -23,73 +24,62 @@ import java.util.UUID;
 public class HotelBranchServiceImpl implements HotelBranchService {
 
     private final HotelBranchRepo hotelBranchRepo;
-    private final HotelRepo hotelRepo;
     private final HotelBranchMapper hotelBranchMapper;
 
     @Override
     @Transactional
     public HotelBranchResponse create(CreateHotelBranchRequest request) {
-        Hotel hotel = hotelRepo.findById(request.hotelId())
-                .orElseThrow(()->new ResourceNotFoundException("Hotel", request.hotelId()));
-        HotelBranch hotelBranch = hotelBranchMapper.toEntity(request);
-        hotelBranch.setHotel(hotel);
-        hotelBranch.setStatus(ERecordStatus.ACTIVE);
-
-        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
-        return hotelBranchMapper.toResponse(saved);
+        TenantContext.require(); // fail early with a clear error if no hotel is selected
+        HotelBranch branch = hotelBranchMapper.toEntity(request);
+        branch.setStatus(ERecordStatus.ACTIVE);
+        return hotelBranchMapper.toResponse(hotelBranchRepo.save(branch));
     }
 
     @Override
     @Transactional
-    public HotelBranchResponse update(UUID id, CreateHotelBranchRequest hotelBranchRequest) {
-        Hotel hotel = hotelRepo.findById(hotelBranchRequest.hotelId())
-                .orElseThrow(()->new ResourceNotFoundException("Hotel", hotelBranchRequest.hotelId()));
-
-        HotelBranch hotelBranch = hotelBranchRepo.findById(id)
-                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", id));
-
-        hotelBranchMapper.updateEntityFromRequest(hotelBranchRequest, hotelBranch);
-
-        hotelBranch.setHotel(hotel);
-        return hotelBranchMapper.toResponse(hotelBranchRepo.save(hotelBranch));
+    public HotelBranchResponse update(UUID id, CreateHotelBranchRequest request) {
+        HotelBranch branch = hotelBranchRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel Branch", id));
+        hotelBranchMapper.updateEntityFromRequest(request, branch);
+        return hotelBranchMapper.toResponse(branch); // managed entity: dirty checking persists it
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<HotelBranchResponse> findAll(Pageable pageable) {
-        return hotelBranchRepo.findAll(pageable)
-                .map(hotelBranchMapper::toResponse);
+        return hotelBranchRepo.findAll(pageable).map(hotelBranchMapper::toResponse);
     }
 
     @Override
-    public HotelBranchResponse findOne(UUID hotelBranchId) {
-        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
-                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
-        return hotelBranchMapper.toResponse(hotelBranch);
+    @Transactional(readOnly = true)
+    public HotelBranchResponse findOne(UUID id) {
+        return hotelBranchMapper.toResponse(hotelBranchRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel Branch", id)));
     }
 
     @Override
-    public HotelBranchResponse activate(UUID hotelBranchId) {
-        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
-                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
-        hotelBranch.setStatus(ERecordStatus.ACTIVE);
-        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
-        return hotelBranchMapper.toResponse(saved);
+    @Transactional
+    public HotelBranchResponse activate(UUID id) {
+        HotelBranch branch = hotelBranchRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel Branch", id));
+        branch.setStatus(ERecordStatus.ACTIVE);
+        return hotelBranchMapper.toResponse(branch);
     }
 
     @Override
-    public HotelBranchResponse deactivate(UUID hotelBranchId) {
-        HotelBranch hotelBranch = hotelBranchRepo.findById(hotelBranchId)
-                .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", hotelBranchId));
-        hotelBranch.setStatus(ERecordStatus.INACTIVE);
-        HotelBranch saved = hotelBranchRepo.save(hotelBranch);
-        return hotelBranchMapper.toResponse(saved);
+    @Transactional
+    public HotelBranchResponse deactivate(UUID id) {
+        HotelBranch branch = hotelBranchRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Hotel Branch", id));
+        branch.setStatus(ERecordStatus.INACTIVE);
+        return hotelBranchMapper.toResponse(branch);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<HotelBranchResponse> findByHotelAndActive(UUID hotelId, Pageable pageable) {
-        return hotelBranchRepo.findByHotelIdAndStatus(hotelId, ERecordStatus.ACTIVE, pageable)
+        TenantContext.requireCurrent(hotelId); // the path id must be your own hotel
+        return hotelBranchRepo.findByStatus(ERecordStatus.ACTIVE, pageable)
                 .map(hotelBranchMapper::toResponse);
     }
 }
