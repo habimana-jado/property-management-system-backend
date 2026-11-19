@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.payment.dtos.PaymentResult;
 import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
 import rw.afriteck.pms.payment.enums.EPaymentStatus;
@@ -26,6 +27,14 @@ public class PaymentService implements rw.afriteck.pms.payment.service.PaymentSe
     @Override
     @Transactional
     public PaymentResult processPayment(ProcessPaymentRequest paymentRequest) {
+        TenantContext.require(); // payments always belong to a hotel
+
+        if (paymentRequest.amount() == null || paymentRequest.amount().signum() <= 0) {
+            throw new BusinessRuleViolationException("INVALID_AMOUNT", "Payment amount must be greater than zero");
+        }
+        if (paymentRequest.amountOwed() == null) {
+            throw new BusinessRuleViolationException("INVALID_AMOUNT_OWED", "Amount owed is required");
+        }
 
         BigDecimal alreadyPaid = paymentRepo.sumActiveAmountByPayableId(paymentRequest.payableId(), paymentRequest.payableType());
         BigDecimal remainingBalance = paymentRequest.amountOwed().subtract(alreadyPaid);

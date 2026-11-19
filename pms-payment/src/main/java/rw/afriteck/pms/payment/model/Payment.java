@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.common.enums.EPaymentMethod;
 import rw.afriteck.pms.common.enums.EPayableType;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.payment.enums.EPaymentStatus;
 
 import java.math.BigDecimal;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "payments")
-public class Payment extends Auditable {
+public class Payment extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

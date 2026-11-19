@@ -13,9 +13,6 @@ import java.util.UUID;
 
 public interface PaymentRepo extends JpaRepository<Payment, UUID> {
 
-    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM Payment p WHERE p.status = 'COMPLETED'")
-    BigDecimal sumActiveAmountByBillId(@Param("billId") UUID billId);
-
     @Query("""
         SELECT COALESCE(SUM(p.amount), 0) FROM Payment p
         WHERE p.payableId = :payableId
@@ -24,11 +21,17 @@ public interface PaymentRepo extends JpaRepository<Payment, UUID> {
         """)
     BigDecimal sumActiveAmountByPayableId(
             @Param("payableId") UUID payableId,
-            @Param("payableType") EPayableType payableType
-    );
+            @Param("payableType") EPayableType payableType);
 
-    @Query("SELECT COALESCE(SUM(p.amount), 0) from Payment p " +
-            "WHERE p.payableId in :payableIds AND p.payableType = :payableType " +
-            "AND p.method = :method AND p.status = 'COMPLETED' ")
-    BigDecimal sumAmountByPayableIdsAndTypeAndMethod(List<UUID> payableIds, EPayableType payableType, EPaymentMethod method);
+    @Query("""
+        SELECT COALESCE(SUM(p.amount), 0) FROM Payment p
+        WHERE p.payableId IN :payableIds
+        AND p.payableType = :payableType
+        AND p.method = :method
+        AND p.status = 'COMPLETED'
+        """)
+    BigDecimal sumAmountByPayableIdsAndTypeAndMethod(
+            @Param("payableIds") List<UUID> payableIds,
+            @Param("payableType") EPayableType payableType,
+            @Param("method") EPaymentMethod method);
 }
