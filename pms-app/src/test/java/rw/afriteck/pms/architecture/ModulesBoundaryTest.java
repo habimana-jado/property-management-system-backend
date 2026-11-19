@@ -7,7 +7,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(packages = "rw.afriteck.pms")
-class StockBoundaryTest {
+class ModulesBoundaryTest {
     @ArchTest
     static final ArchRule only_stock_touches_its_internals =
             noClasses().that().resideOutsideOfPackage("rw.afriteck.pms.stock..")
@@ -29,4 +29,9 @@ class StockBoundaryTest {
             noClasses().that().resideInAPackage("rw.afriteck.pms.credit..")
                     .should().dependOnClassesThat().resideInAnyPackage(
                             "rw.afriteck.pms.restaurant..", "rw.afriteck.pms.pos..");
+
+    @ArchTest
+    static final ArchRule nobody_depends_on_platform =
+            noClasses().that().resideOutsideOfPackage("rw.afriteck.pms.platform..")
+                    .should().dependOnClassesThat().resideInAPackage("rw.afriteck.pms.platform..");
 }

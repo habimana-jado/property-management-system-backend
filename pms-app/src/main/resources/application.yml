@@ -23,3 +23,9 @@ app:
     refresh-token-validity-ms: 604800000
   phone:
     default-country-code: 250
+
+pms:
+  platform:
+    bootstrap:
+      username: admin
+      password: root@123

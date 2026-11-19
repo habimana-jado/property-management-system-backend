@@ -3,6 +3,7 @@ package rw.afriteck.pms.property.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.ERecordStatus;
@@ -25,65 +26,72 @@ public class HotelServiceImpl implements HotelService {
     private final HotelMapper hotelMapper;
 
     @Override
-    public HotelResponse create(CreateHotelRequest hotelRequest) {
-        Hotel hotel = hotelMapper.toEntity(hotelRequest);
+    @Transactional
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    public HotelResponse create(CreateHotelRequest request) {
+        Hotel hotel = hotelMapper.toEntity(request);
         hotel.setStatus(ERecordStatus.ACTIVE);
-        Hotel savedEntity = hotelRepo.save(hotel);
-        return hotelMapper.toResponse(savedEntity);
+        return hotelMapper.toResponse(hotelRepo.save(hotel));
     }
 
-    // HotelServiceImpl
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('PLATFORM_VIEW_HOTELS')")
+    public Page<HotelResponse> findAll(Pageable pageable) {
+        return hotelRepo.findAll(pageable).map(hotelMapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAuthority('PLATFORM_VIEW_HOTELS')")
+    public HotelResponse findOne(UUID hotelId) {
+        return hotelMapper.toResponse(getOrThrow(hotelId));
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    public HotelResponse update(UUID hotelId, CreateHotelRequest request) {
+        Hotel hotel = getOrThrow(hotelId);
+        hotelMapper.updateEntityFromRequest(request, hotel);
+        return hotelMapper.toResponse(hotel);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    public HotelResponse activate(UUID hotelId) {
+        Hotel hotel = getOrThrow(hotelId);
+        hotel.setStatus(ERecordStatus.ACTIVE);
+        return hotelMapper.toResponse(hotel);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    public HotelResponse deactivate(UUID hotelId) {
+        Hotel hotel = getOrThrow(hotelId);
+        hotel.setStatus(ERecordStatus.INACTIVE);
+        return hotelMapper.toResponse(hotel);
+    }
+
+    // tenant-bound: any hotel staff member can read their own hotel
     @Override
     @Transactional(readOnly = true)
     public HotelResponse findCurrent() {
-        return findOne(TenantContext.require());
+        return hotelMapper.toResponse(getOrThrow(TenantContext.require()));
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('HOTEL_PROFILE_MANAGE')")
     public HotelResponse updateCurrent(CreateHotelRequest request) {
-        return update(TenantContext.require(), request);
-    }
-
-    @Override
-    @Transactional
-    public HotelResponse update(UUID hotelId, CreateHotelRequest hotelRequest) {
-        Hotel hotel = hotelRepo.findById(hotelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
-        hotelMapper.updateEntityFromRequest(hotelRequest, hotel);
+        Hotel hotel = getOrThrow(TenantContext.require());
+        hotelMapper.updateEntityFromRequest(request, hotel);
         return hotelMapper.toResponse(hotel);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<HotelResponse> findAll(Pageable pageable) {
-        return hotelRepo.findAll(pageable)
-                .map(hotelMapper::toResponse);
-    }
-
-    @Override
-    public HotelResponse findOne(UUID hotelId) {
-        Hotel hotel = hotelRepo.findById(hotelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
-        return hotelMapper.toResponse(hotel);
-    }
-
-    @Override
-    @Transactional
-    public HotelResponse activate(UUID hotelId) {
-        Hotel hotel = hotelRepo.findById(hotelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
-        hotel.setStatus(ERecordStatus.ACTIVE);
-        Hotel activatedHotel = hotelRepo.save(hotel);
-        return hotelMapper.toResponse(activatedHotel);
-    }
-
-    @Override
-    @Transactional
-    public HotelResponse deactivate(UUID hotelId) {
-        Hotel hotel = hotelRepo.findById(hotelId)
-                .orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
-        hotel.setStatus(ERecordStatus.INACTIVE);
-        return hotelMapper.toResponse(hotelRepo.save(hotel));
+    private Hotel getOrThrow(UUID hotelId) {
+        return hotelRepo.findById(hotelId).orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
     }
 }

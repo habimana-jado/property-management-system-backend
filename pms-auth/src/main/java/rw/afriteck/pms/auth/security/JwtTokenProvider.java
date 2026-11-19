@@ -60,6 +60,19 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public String generatePlatformAccessToken(UUID operatorId, String username, Set<String> authorities) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(String.valueOf(operatorId))
+                .claim("username", username)
+                .claim("authorities", authorities)
+                .claim("type", "platform-access")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusMillis(accessTokenValidityMs)))
+                .signWith(key)
+                .compact();
+    }
+
     public Claims parseClaims(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }

@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface PermissionRepo extends JpaRepository<Permission, UUID> {
-    List<Permission> findByCodeInAndPlatformOnlyFalse(Set<String> codes);
+    List<Permission> findByCodeIn(Set<String> codes);
 
-    List<Permission> findByPlatformOnlyFalse();
 }

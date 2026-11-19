@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import rw.afriteck.pms.auth.dtos.PlatformPrincipal;
 import rw.afriteck.pms.auth.security.JwtAuthenticationFilter;
 import rw.afriteck.pms.auth.security.JwtTokenProvider;
 import rw.afriteck.pms.common.tenant.TenantContext;
@@ -67,5 +68,22 @@ class JwtAuthenticationFilterTenantTest {
         filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> seen.set(TenantContext.get()));
 
         assertThat(seen.get()).isEmpty();
+    }
+
+    @Test
+    void platformTokenAuthenticatesAsOperator_andNeverSetsATenant() throws Exception {
+        String token = provider.generatePlatformAccessToken(UUID.randomUUID(), "op1", Set.of("PLATFORM_VIEW_HOTELS"));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + token);
+        AtomicReference<Optional<UUID>> tenantSeen = new AtomicReference<>();
+        AtomicReference<Object> principalSeen = new AtomicReference<>();
+
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> {
+            tenantSeen.set(TenantContext.get());
+            principalSeen.set(SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        });
+
+        assertThat(principalSeen.get()).isInstanceOf(PlatformPrincipal.class);
+        assertThat(tenantSeen.get()).isEmpty();
     }
 }

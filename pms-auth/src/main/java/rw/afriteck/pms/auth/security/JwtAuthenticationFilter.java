@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import rw.afriteck.pms.auth.dtos.PlatformPrincipal;
 import rw.afriteck.pms.common.tenant.TenantContext;
 
 import java.io.IOException;
@@ -35,14 +36,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String token = header.substring(7);
                 if (tokenProvider.isValid(token)) {
                     Claims claims = tokenProvider.parseClaims(token);
-                    if ("access".equals(claims.get("type", String.class))) {
-                        Authentication authentication = buildAuthentication(claims);
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                    String type = claims.get("type", String.class);
 
-                        StaffPrincipal principal = (StaffPrincipal) authentication.getPrincipal();
+                    if ("access".equals(type)) {
+                        StaffPrincipal principal = staffPrincipal(claims);
+                        SecurityContextHolder.getContext().setAuthentication(
+                                new UsernamePasswordAuthenticationToken(principal, null, authorities(claims)));
                         if (principal.hotelId() != null) {
                             TenantContext.set(principal.hotelId());
                         }
+                    } else if ("platform-access".equals(type)) {
+                        PlatformPrincipal principal = new PlatformPrincipal(
+                                UUID.fromString(claims.getSubject()), claims.get("username", String.class));
+                        SecurityContextHolder.getContext().setAuthentication(
+                                new UsernamePasswordAuthenticationToken(principal, null, authorities(claims)));
+                        // deliberately no tenant: platform operators never act inside a hotel
                     }
                 }
             }
@@ -73,5 +81,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 claims.get("username", String.class), hotelId, hotelBranchId);
 
         return new UsernamePasswordAuthenticationToken(principal, null, authorities);
+    }
+
+    private List<SimpleGrantedAuthority> authorities(Claims claims) {
+        Collection<?> codes = claims.get("authorities", Collection.class);
+        return codes == null ? List.of()
+                : codes.stream().map(String::valueOf).map(SimpleGrantedAuthority::new).toList();
+    }
+
+    private StaffPrincipal staffPrincipal(Claims claims) {
+        String staffId = claims.get("staffId", String.class);
+        String hotelId = claims.get("hotelId", String.class);
+        String branchId = claims.get("hotelBranchId", String.class);
+        return new StaffPrincipal(
+                UUID.fromString(claims.getSubject()),
+                staffId != null ? UUID.fromString(staffId) : null,
+                claims.get("username", String.class),
+                hotelId != null ? UUID.fromString(hotelId) : null,
+                branchId != null ? UUID.fromString(branchId) : null);
     }
 }

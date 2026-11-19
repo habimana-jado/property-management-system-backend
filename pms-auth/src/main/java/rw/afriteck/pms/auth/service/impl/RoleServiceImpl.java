@@ -90,7 +90,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<PermissionResponse> getAllPermissions() {
-        return permissionRepository.findByPlatformOnlyFalse().stream().map(roleMapper::toResponse).toList();
+        return permissionRepository.findAll().stream().map(roleMapper::toResponse).toList();
     }
 
     private Role findRoleOrThrow(UUID roleId) {
@@ -99,8 +99,11 @@ public class RoleServiceImpl implements RoleService {
     }
 
     private Set<Permission> resolvePermissions(Set<String> codes) {
-        List<Permission> found = permissionRepository.findByCodeInAndPlatformOnlyFalse(codes);
-
+        if (codes.stream().anyMatch(code -> code.startsWith("PLATFORM_"))) {
+            throw new BusinessRuleViolationException("INVALID_PERMISSION",
+                    "Platform permissions cannot be assigned to hotel roles");
+        }
+        List<Permission> found = permissionRepository.findByCodeIn(codes);
         if (found.size() != codes.size()) {
             throw new ResourceNotFoundException("One or more permission codes are invalid", codes);
         }

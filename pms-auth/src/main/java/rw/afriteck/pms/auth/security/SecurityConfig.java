@@ -42,6 +42,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/pms/auth/**").permitAll()
                         .requestMatchers("/api/v1/pms/actuator/health").permitAll()
+                        .requestMatchers("/api/v1/pms/platform/auth/**").permitAll()
+                        .requestMatchers("/api/v1/pms/platform/**").hasAnyAuthority(
+                                "PLATFORM_VIEW_HOTELS", "PLATFORM_MANAGE_HOTELS", "PLATFORM_MANAGE_OPERATORS")
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )

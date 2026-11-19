@@ -4,6 +4,7 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import rw.afriteck.pms.auth.dtos.PlatformPrincipal;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -15,12 +16,18 @@ public class SpringSecurityAuditorAware implements AuditorAware<UUID> {
     public Optional<UUID> getCurrentAuditor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || !(authentication.getPrincipal() instanceof StaffPrincipal principal)) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.empty();
         }
 
-        return Optional.of(principal.userId());
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof StaffPrincipal staff) {
+            return Optional.of(staff.userId());
+        }
+        if (principal instanceof PlatformPrincipal operator) {
+            return Optional.of(operator.operatorId());
+        }
+        return Optional.empty();   // anonymous ("anonymousUser" is a String) or an unknown principal type
     }
 }
