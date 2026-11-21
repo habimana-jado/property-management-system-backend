@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
+import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.common.security.CurrentUserService;
 import rw.afriteck.pms.credit.dtos.GrantCreditRequest;
@@ -45,11 +46,15 @@ public class POSSaleServiceImpl implements POSSaleService {
     private final CurrentUserService currentUserService;
     private final StockApi stockApi;
     private final CreditService creditService;
+    private final PosBranchAccess branchAccess;
 
     @Override
     @Transactional
     public POSSaleResponse create(CreateSaleRequest request) {
         UUID branchId = currentUserService.requireCurrentHotelBranchId();
+        if (branchId == null) {
+            throw new ForbiddenException("BRANCH_REQUIRED", "Selling requires an account assigned to a branch");
+        }
         UUID staffId = currentUserService.requireCurrentStaffId();
 
         POSRegisterSession session = sessionRepo.findByTerminalIdAndStatus(request.terminalId(), ERegisterSessionStatus.OPEN)
@@ -271,8 +276,10 @@ public class POSSaleServiceImpl implements POSSaleService {
     }
 
     private POSSale getOrThrow(UUID saleId) {
-        return saleRepo.findById(saleId)
+        POSSale sale = saleRepo.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("POSSale", saleId));
+        branchAccess.require(sale.getHotelBranchId());
+        return sale;
     }
 
     private void finalizeSale(POSSale sale, List<POSSaleItem> items, ESaleStatus finalStatus) {
@@ -284,6 +291,8 @@ public class POSSaleServiceImpl implements POSSaleService {
     private POSSale getDraftForUpdateOrThrow(UUID saleId) {
         POSSale sale = saleRepo.findByIdForUpdate(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("POSSale", saleId));
+        branchAccess.require(sale.getHotelBranchId());
+
         if (sale.getStatus() != ESaleStatus.DRAFT) {
             throw new BusinessRuleViolationException("SALE_NOT_EDITABLE",
                     "Sale " + saleId + " is not in a draft state");

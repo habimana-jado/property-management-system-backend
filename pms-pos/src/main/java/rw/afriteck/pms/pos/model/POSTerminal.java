@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.enums.ERecordStatus;
+import rw.afriteck.pms.common.tenant.TenantOwned;
 
 import java.util.UUID;
 
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class POSTerminal {
+public class POSTerminal extends TenantOwned {
 
     @Id
     @GeneratedValue

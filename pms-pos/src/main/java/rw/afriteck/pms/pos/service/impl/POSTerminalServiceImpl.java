@@ -25,10 +25,13 @@ public class POSTerminalServiceImpl implements POSTerminalService {
 
     private final POSTerminalRepository terminalRepo;
     private final POSTerminalMapper mapper;
+    private final PosBranchAccess branchAccess;
 
     @Override
     @Transactional
     public POSTerminalResponse create(CreateTerminalRequest request) {
+        branchAccess.requireBranch(request.hotelBranchId());
+
         if (terminalRepo.existsByHotelBranchIdAndCode(request.hotelBranchId(), request.code())) {
             throw new DuplicateResourceException("Terminal with Code:"+ request.code()+" already exists");
         }
@@ -47,6 +50,8 @@ public class POSTerminalServiceImpl implements POSTerminalService {
     @Override
     @Transactional(readOnly = true)
     public List<POSTerminalResponse> findByHotelBranch(UUID hotelBranchId) {
+        branchAccess.require(hotelBranchId);
+
         return terminalRepo.findByHotelBranchId(hotelBranchId).stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -69,7 +74,11 @@ public class POSTerminalServiceImpl implements POSTerminalService {
     }
 
     private POSTerminal getOrThrow(UUID id) {
-        return terminalRepo.findById(id)
+        POSTerminal entity = terminalRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("POSProductCategory", id));
+
+        branchAccess.require(entity.getHotelBranchId());
+
+        return entity;
     }
 }

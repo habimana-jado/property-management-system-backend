@@ -1,4 +1,4 @@
-package rw.afriteck.pms.pos;
+package rw.afriteck.pms.pos.service.impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ import rw.afriteck.pms.common.security.CurrentUserService;
 import rw.afriteck.pms.credit.dtos.GrantCreditRequest;
 import rw.afriteck.pms.credit.service.CreditService;
 import rw.afriteck.pms.payment.dtos.ProcessPaymentRequest;
-import rw.afriteck.pms.payment.service.PaymentService;
+import rw.afriteck.pms.payment.service.impl.PaymentService;
 import rw.afriteck.pms.pos.dtos.CompleteSaleOnCreditRequest;
 import rw.afriteck.pms.pos.dtos.TenderRequest;
 import rw.afriteck.pms.pos.enums.ESaleStatus;
@@ -24,7 +24,6 @@ import rw.afriteck.pms.pos.mapper.POSSaleMapper;
 import rw.afriteck.pms.pos.model.*;
 import rw.afriteck.pms.pos.repository.POSSaleItemRepository;
 import rw.afriteck.pms.pos.repository.POSSaleRepository;
-import rw.afriteck.pms.pos.service.impl.POSSaleServiceImpl;
 import rw.afriteck.pms.stock.api.StockApi;
 import rw.afriteck.pms.stock.api.command.ConsumeForSaleCommand;
 
@@ -55,6 +54,8 @@ class POSSaleServiceCompleteOnCreditTest {
     POSSaleMapper mapper;
     @Mock
     CurrentUserService currentUserService;
+    @Mock
+    PosBranchAccess branchAccess;
     @InjectMocks
     POSSaleServiceImpl saleService;
 
@@ -112,7 +113,7 @@ class POSSaleServiceCompleteOnCreditTest {
         assertThat(grant.getValue().amount()).isEqualByComparingTo("15000");
         assertThat(grant.getValue().sourceType()).isEqualTo(EPayableType.POS_SALE);
         assertThat(grant.getValue().sourceId()).isEqualTo(sale.getId());
-        assertThat(grant.getValue().hotelBranchId()).isEqualTo(sale.getHotelBranchId());
+        assertThat(grant.getValue().originBranchId()).isEqualTo(sale.getHotelBranchId());   // was hotelBranchId()
 
         ArgumentCaptor<ProcessPaymentRequest> pay = ArgumentCaptor.forClass(ProcessPaymentRequest.class);
         verify(paymentService).processPayment(pay.capture());

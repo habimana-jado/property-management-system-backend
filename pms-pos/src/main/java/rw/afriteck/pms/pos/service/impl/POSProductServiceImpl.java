@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import rw.afriteck.pms.common.enums.ERecordStatus;
+import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.DuplicateResourceException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.pos.dtos.*;
@@ -36,23 +37,33 @@ public class POSProductServiceImpl implements POSProductService {
     private final POSProductMapper mapper;
     private final ProductImageStorage imageStorage;
     private final StockCatalogApi stockCatalogApi;
+    private final PosBranchAccess branchAccess;
 
     private static final int SEARCH_RESULT_LIMIT = 20;
 
     @Override
     @Transactional
     public POSProductResponse create(CreatePOSProductRequest request) {
+
+        branchAccess.requireBranch(request.hotelBranchId());
+
         stockCatalogApi.validateSaleMapping(request.trackInventory(), request.stockItemId(), null, false);
+
         if (productRepo.existsByHotelBranchIdAndSku(request.hotelBranchId(), request.sku())) {
-            throw new DuplicateResourceException("POSProduct with SKU "+ request.sku()+" already exists");
+            throw new DuplicateResourceException("POSProduct with SKU " + request.sku() + " already exists");
         }
         if (request.barcode() != null
                 && productRepo.existsByHotelBranchIdAndBarcode(request.hotelBranchId(), request.barcode())) {
-            throw new DuplicateResourceException("POSProduct with barcode"+ request.barcode()+" already exists");
+            throw new DuplicateResourceException("POSProduct with barcode" + request.barcode() + " already exists");
         }
+
         POSProductCategory category = categoryRepo.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("POSProductCategory", request.categoryId()));
 
+        if (!category.getHotelBranchId().equals(request.hotelBranchId())) {
+            throw new BusinessRuleViolationException("CATEGORY_BRANCH_MISMATCH",
+                    "The category belongs to a different branch");
+        }
         POSProduct entity = mapper.toEntity(request);
         entity.setCategory(category);
         entity.setStatus(ERecordStatus.ACTIVE);
@@ -73,8 +84,13 @@ public class POSProductServiceImpl implements POSProductService {
     @Transactional
     public POSProductResponse update(UUID id, UpdatePOSProductRequest request) {
         POSProduct entity = getOrThrow(id);
+
         POSProductCategory category = categoryRepo.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("POSProductCategory", request.categoryId()));
+        if (!category.getHotelBranchId().equals(entity.getHotelBranchId())) {
+            throw new BusinessRuleViolationException("CATEGORY_BRANCH_MISMATCH",
+                    "The category belongs to a different branch");
+        }
 
         mapper.updateEntity(entity, request);
         entity.setCategory(category);
@@ -84,6 +100,8 @@ public class POSProductServiceImpl implements POSProductService {
     @Override
     @Transactional(readOnly = true)
     public List<POSProductSummaryResponse> search(UUID hotelBranchId, String query) {
+        branchAccess.require(hotelBranchId);
+
         if (query == null || query.isBlank()) {
             return List.of();
         }
@@ -100,6 +118,8 @@ public class POSProductServiceImpl implements POSProductService {
     @Override
     @Transactional(readOnly = true)
     public List<POSProductSummaryResponse> listForBrowse(UUID hotelBranchId, UUID categoryId) {
+        branchAccess.require(hotelBranchId);
+
         List<POSProduct> products = categoryId != null
                 ? productRepo.findByHotelBranchIdAndCategoryIdAndStatus(hotelBranchId, categoryId, ERecordStatus.ACTIVE)
                 : productRepo.findByHotelBranchIdAndStatus(hotelBranchId, ERecordStatus.ACTIVE);
@@ -137,6 +157,8 @@ public class POSProductServiceImpl implements POSProductService {
     @Override
     @Transactional(readOnly = true)
     public List<POSProductResponse> findByHotelBranch(UUID hotelBranchId) {
+        branchAccess.require(hotelBranchId);
+
         return productRepo.findByHotelBranchId(hotelBranchId).stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -145,6 +167,8 @@ public class POSProductServiceImpl implements POSProductService {
     @Override
     @Transactional(readOnly = true)
     public List<POSProductResponse> findByHotelBranchAndCategory(UUID hotelBranchId, UUID categoryId) {
+        branchAccess.require(hotelBranchId);
+
         return productRepo.findByHotelBranchIdAndCategoryId(hotelBranchId, categoryId).stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -154,6 +178,7 @@ public class POSProductServiceImpl implements POSProductService {
     @Transactional
     public POSProductResponse activate(UUID id) {
         POSProduct entity = getOrThrow(id);
+        branchAccess.require(entity.getHotelBranchId());
         entity.setStatus(ERecordStatus.ACTIVE);
         return mapper.toResponse(entity);
     }
@@ -162,13 +187,16 @@ public class POSProductServiceImpl implements POSProductService {
     @Transactional
     public POSProductResponse deactivate(UUID id) {
         POSProduct entity = getOrThrow(id);
+        branchAccess.require(entity.getHotelBranchId());
         entity.setStatus(ERecordStatus.INACTIVE);
         return mapper.toResponse(entity);
     }
 
     private POSProduct getOrThrow(UUID id) {
-        return productRepo.findById(id)
+        POSProduct entity = productRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("POSProduct", id));
+        branchAccess.require(entity.getHotelBranchId());
+        return entity;
     }
 
     private String probeContentType(Path imagePath) {

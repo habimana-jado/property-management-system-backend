@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
 import rw.afriteck.pms.common.enums.ERecordStatus;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class POSProduct extends Auditable {
+public class POSProduct extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

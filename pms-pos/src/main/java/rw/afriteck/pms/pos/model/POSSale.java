@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.pos.enums.ESaleStatus;
 
 import java.math.BigDecimal;
@@ -15,7 +16,7 @@ import java.util.UUID;
 @Table(name = "pos_sale",
         uniqueConstraints = @UniqueConstraint(columnNames = {"hotel_branch_id", "sale_number"}))
 @Getter @Setter @NoArgsConstructor
-public class POSSale extends Auditable {
+public class POSSale extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -11,6 +11,7 @@ import rw.afriteck.pms.pos.dtos.POSProductCategoryResponse;
 import rw.afriteck.pms.pos.dtos.UpdatePOSProductCategoryRequest;
 import rw.afriteck.pms.pos.mapper.POSProductCategoryMapper;
 import rw.afriteck.pms.pos.model.POSProductCategory;
+import rw.afriteck.pms.pos.model.POSTerminal;
 import rw.afriteck.pms.pos.repository.POSProductCategoryRepository;
 import rw.afriteck.pms.pos.service.POSProductCategoryService;
 
@@ -23,10 +24,13 @@ public class POSProductCategoryServiceImpl implements POSProductCategoryService 
 
     private final POSProductCategoryRepository categoryRepo;
     private final POSProductCategoryMapper mapper;
+    private final PosBranchAccess branchAccess;
 
     @Override
     @Transactional
     public POSProductCategoryResponse create(CreatePOSProductCategoryRequest request) {
+        branchAccess.requireBranch(request.hotelBranchId());
+
         if (categoryRepo.existsByHotelBranchIdAndCategoryNameIgnoreCase(request.hotelBranchId(), request.categoryName())) {
             throw new DuplicateResourceException("Product Category Name:"+ request.categoryName()+" already exists");
         }
@@ -57,6 +61,7 @@ public class POSProductCategoryServiceImpl implements POSProductCategoryService 
     @Override
     @Transactional(readOnly = true)
     public List<POSProductCategoryResponse> findByHotelBranch(UUID hotelBranchId) {
+        branchAccess.require(hotelBranchId);
         return categoryRepo.findByHotelBranchId(hotelBranchId).stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -79,7 +84,12 @@ public class POSProductCategoryServiceImpl implements POSProductCategoryService 
     }
 
     private POSProductCategory getOrThrow(UUID id) {
-        return categoryRepo.findById(id)
+        POSProductCategory entity = categoryRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("POSProductCategory", id));
+
+        branchAccess.require(entity.getHotelBranchId());
+
+        return entity;
+
     }
 }

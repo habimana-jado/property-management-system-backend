@@ -37,6 +37,7 @@ public class POSRegisterSessionServiceImpl implements POSRegisterSessionService 
     private final PaymentRepo paymentRepo;
     private final POSRegisterSessionMapper mapper;
     private final CurrentUserService currentUserService;
+    private final PosBranchAccess branchAccess;
 
     @Override
     @Transactional
@@ -106,11 +107,15 @@ public class POSRegisterSessionServiceImpl implements POSRegisterSessionService 
     public POSRegisterSessionResponse getActiveSession(UUID terminalId) {
         POSRegisterSession entity = sessionRepo.findByTerminalIdAndStatus(terminalId, ERegisterSessionStatus.OPEN)
                 .orElseThrow(() -> new ResourceNotFoundException("Active POSRegisterSession", terminalId));
+        branchAccess.require(entity.getHotelBranchId());
+
         return mapper.toResponse(entity);
     }
 
     private POSRegisterSession getOrThrow(UUID id) {
-        return sessionRepo.findById(id)
+        POSRegisterSession session = sessionRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("POSRegisterSession", id));
+        branchAccess.require(session.getHotelBranchId());
+        return session;
     }
 }
