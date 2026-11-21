@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import rw.afriteck.pms.StockTestApplication;
 import rw.afriteck.pms.common.enums.ERecordStatus;
 import rw.afriteck.pms.common.security.CurrentUserService;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.property.model.Hotel;
 import rw.afriteck.pms.property.model.HotelBranch;
 import rw.afriteck.pms.stock.api.CatalogSetupApi;
@@ -67,7 +69,9 @@ import rw.afriteck.pms.stock.api.view.StockOnHandRow;
         webEnvironment = SpringBootTest.WebEnvironment.NONE,
         properties = {
                 "spring.jpa.hibernate.ddl-auto=create-drop",
-                "spring.jpa.open-in-view=false"
+                "spring.jpa.open-in-view=false",
+                "spring.jpa.properties.hibernate.tenant_identifier_resolver="
+                        + "rw.afriteck.pms.common.tenant.HotelTenantIdentifierResolver"
         })
 @Import(IntegrationTestBeans.class)
 abstract class AbstractStockIntegrationTest {
@@ -99,6 +103,11 @@ abstract class AbstractStockIntegrationTest {
     @Autowired protected PlatformTransactionManager txManager;
     @PersistenceContext protected EntityManager em;
 
+    @AfterEach
+    void clearTenant() {
+        TenantContext.clear();
+    }
+
     // ------------------------------------------------------------------ the world one test works in
 
     protected record World(String tag, UUID branchId, StoreView main, StoreView bar, UUID terminalId, UUID restaurantId,
@@ -106,30 +115,47 @@ abstract class AbstractStockIntegrationTest {
                            ItemView beef, ItemView bun, ItemView soda, RecipeView burger) {
         UnitView unit(String code) { return units.get(code); }
     }
+    private UUID defaultHotelId;
 
-    /**
-     * A fresh hotel branch with a MAIN store, a bar store, a POS terminal and a restaurant both assigned to the
-     * bar, three items (beef in G, bun in PCS, soda in PCS with a 24-piece carton) and a burger recipe
-     * (150 G beef + 1 bun). Leaves the mocked user acting as this new branch.
-     */
-    protected World newWorld() {
+    private UUID defaultHotel() {
+        if (defaultHotelId == null) {
+            defaultHotelId = newHotel();
+        }
+        return defaultHotelId;
+    }
+
+    protected UUID newHotel() {
         String tag = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-
-        UUID branchId = new TransactionTemplate(txManager).execute(status -> {
+        return new TransactionTemplate(txManager).execute(status -> {
             Hotel hotel = new Hotel();
             hotel.setHotelName("Hotel " + tag);
             hotel.setEmail(tag.toLowerCase() + "@hotel.test");
             hotel.setStatus(ERecordStatus.ACTIVE);
             em.persist(hotel);
+            return hotel.getId();
+        });
+    }
 
+    protected World newWorld() {
+        return newWorld(defaultHotel());
+    }
+    /**
+     * A fresh hotel branch with a MAIN store, a bar store, a POS terminal and a restaurant both assigned to the
+     * bar, three items (beef in G, bun in PCS, soda in PCS with a 24-piece carton) and a burger recipe
+     * (150 G beef + 1 bun). Leaves the mocked user acting as this new branch.
+     */
+    protected World newWorld(UUID hotelId) {
+        String tag = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        TenantContext.set(hotelId);                       // before the transaction opens its session
+        UUID branchId = new TransactionTemplate(txManager).execute(status -> {
             HotelBranch branch = new HotelBranch();
             branch.setName("Branch " + tag);
             branch.setLocation("Kigali");
             branch.setStatus(ERecordStatus.ACTIVE);
-            branch.setHotel(hotel);
-            em.persist(branch);
+            em.persist(branch);                           // hotel_id comes from the tenant
             return branch.getId();
         });
+        actAs(branchId);
         actAs(branchId);
 
         StoreView main = structure.createStore(new StoreCommand("MAIN-" + tag, "Main store", EStoreType.MAIN));
@@ -235,6 +261,8 @@ abstract class AbstractStockIntegrationTest {
 
     /** Runs the tasks at the same instant on separate threads; the result holds null for success, else the failure. */
     protected static List<Throwable> runConcurrently(List<Callable<?>> tasks) throws Exception {
+        UUID tenant = TenantContext.get().orElse(null);
+
         ExecutorService pool = Executors.newFixedThreadPool(tasks.size());
         try {
             CountDownLatch ready = new CountDownLatch(tasks.size());
@@ -242,13 +270,20 @@ abstract class AbstractStockIntegrationTest {
             List<Future<Throwable>> futures = new ArrayList<>();
             for (Callable<?> task : tasks) {
                 futures.add(pool.submit(() -> {
-                    ready.countDown();
-                    go.await();
+                    if (tenant != null) {
+                        TenantContext.set(tenant);
+                    }
                     try {
-                        task.call();
-                        return null;
-                    } catch (Throwable t) {
-                        return t;
+                        ready.countDown();
+                        go.await();
+                        try {
+                            task.call();
+                            return null;
+                        } catch (Throwable t) {
+                            return t;
+                        }
+                    } finally {
+                        TenantContext.clear();
                     }
                 }));
             }

@@ -28,13 +28,22 @@ public class Hotel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
     @Column(nullable = false)
     private String hotelName;
+
+    @Column(name = "hotel_code", nullable = false, unique = true, updatable = false, length = 10)
+    private String hotelCode;
+
     @Column(nullable = false, unique = true)
     private String email;
+
     private String websiteUrl;
+
     private String logoUrl;
+
     private String slogan;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ERecordStatus status;

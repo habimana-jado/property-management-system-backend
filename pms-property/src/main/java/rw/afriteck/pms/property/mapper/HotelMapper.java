@@ -14,5 +14,6 @@ public interface HotelMapper {
     Hotel toEntity(CreateHotelRequest hotelRequest);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "hotelCode", ignore = true)
     void updateEntityFromRequest(CreateHotelRequest request, @MappingTarget Hotel entity);
 }

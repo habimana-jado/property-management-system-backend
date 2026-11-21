@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.UUID;
 @Table(name = "stock_recipe")
 @Getter
 @Setter
-public class Recipe extends Auditable {
+public class Recipe extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

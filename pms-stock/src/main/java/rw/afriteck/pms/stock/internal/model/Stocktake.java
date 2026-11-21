@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.stock.api.enums.EStocktakeStatus;
 
 import java.time.Instant;
@@ -17,7 +18,7 @@ import java.util.UUID;
         indexes = {@Index(name = "idx_stocktake_store_status", columnList = "store_id, status")})
 @Getter
 @Setter
-public class Stocktake extends Auditable {
+public class Stocktake extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

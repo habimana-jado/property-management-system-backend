@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.stock.api.enums.EDocumentType;
 import rw.afriteck.pms.stock.api.enums.ETransferPurpose;
 import rw.afriteck.pms.stock.api.enums.EDocumentStatus;
@@ -15,16 +16,18 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "stock_document",
-    indexes = {@Index(name = "idx_doc_store_time", columnList = "store_id, posted_at")})
+        uniqueConstraints = @UniqueConstraint(name = "uk_stock_document_hotel_no",
+                columnNames = {"hotel_id", "document_no"}),
+        indexes = {@Index(name = "idx_doc_store_time", columnList = "store_id, posted_at")})
 @Getter
 @Setter
-public class StockDocument extends Auditable {
+public class StockDocument extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 40)
+    @Column(nullable = false, length = 40)
     private String documentNo;                  // human readable, e.g. KGL-TRF-000123
 
     @Enumerated(EnumType.STRING)

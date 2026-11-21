@@ -7,6 +7,7 @@ import java.util.UUID;
 public record HotelResponse(
         UUID id,
         String hotelName,
+        String hotelCode,
         String email,
         String websiteUrl,
         String logoUrl,

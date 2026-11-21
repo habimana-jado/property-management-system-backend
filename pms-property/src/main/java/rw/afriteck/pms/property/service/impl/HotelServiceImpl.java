@@ -7,6 +7,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.ERecordStatus;
+import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
+import rw.afriteck.pms.common.exception.DuplicateResourceException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.property.dtos.CreateHotelRequest;
@@ -31,6 +33,11 @@ public class HotelServiceImpl implements HotelService {
     public HotelResponse create(CreateHotelRequest request) {
         Hotel hotel = hotelMapper.toEntity(request);
         hotel.setStatus(ERecordStatus.ACTIVE);
+
+        if (hotelRepo.existsByHotelCode(request.hotelCode())) {
+            throw new DuplicateResourceException("Hotel code already in use: " + request.hotelCode());
+        }
+
         return hotelMapper.toResponse(hotelRepo.save(hotel));
     }
 
@@ -53,6 +60,7 @@ public class HotelServiceImpl implements HotelService {
     @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public HotelResponse update(UUID hotelId, CreateHotelRequest request) {
         Hotel hotel = getOrThrow(hotelId);
+        requireSameHotelCode(hotel, request);
         hotelMapper.updateEntityFromRequest(request, hotel);
         return hotelMapper.toResponse(hotel);
     }
@@ -87,11 +95,19 @@ public class HotelServiceImpl implements HotelService {
     @PreAuthorize("hasAuthority('HOTEL_PROFILE_MANAGE')")
     public HotelResponse updateCurrent(CreateHotelRequest request) {
         Hotel hotel = getOrThrow(TenantContext.require());
+        requireSameHotelCode(hotel, request);
         hotelMapper.updateEntityFromRequest(request, hotel);
         return hotelMapper.toResponse(hotel);
     }
 
     private Hotel getOrThrow(UUID hotelId) {
         return hotelRepo.findById(hotelId).orElseThrow(() -> new ResourceNotFoundException("Hotel", hotelId));
+    }
+
+    private void requireSameHotelCode(Hotel hotel, CreateHotelRequest request) {
+        if (!hotel.getHotelCode().equals(request.hotelCode())) {
+            throw new BusinessRuleViolationException("HOTEL_CODE_IMMUTABLE",
+                    "The hotel code cannot be changed after creation");
+        }
     }
 }

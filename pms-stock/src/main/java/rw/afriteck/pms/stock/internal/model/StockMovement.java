@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Immutable;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.stock.api.enums.EMovementSourceType;
 import rw.afriteck.pms.stock.api.enums.EMovementType;
 
@@ -26,7 +27,7 @@ import java.util.UUID;
         })
 @Getter
 @Setter
-public class StockMovement extends Auditable {
+public class StockMovement extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

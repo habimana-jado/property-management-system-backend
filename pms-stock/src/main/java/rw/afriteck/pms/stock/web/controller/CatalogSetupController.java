@@ -31,13 +31,13 @@ public class CatalogSetupController {
     public List<UnitView> units() { return catalog.units(); }
 
     @PostMapping("/units")
-    @PreAuthorize(StockPermissions.Has.CATALOG_MANAGE)
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public ResponseEntity<UnitView> createUnit(@Valid @RequestBody UnitCommand c) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalog.createUnit(c));
     }
 
     @PatchMapping("/units/{id}")
-    @PreAuthorize(StockPermissions.Has.CATALOG_MANAGE)
+    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public UnitView renameUnit(@PathVariable UUID id, @Valid @RequestBody RenameRequest r) {
         return catalog.renameUnit(id, r.name());
     }

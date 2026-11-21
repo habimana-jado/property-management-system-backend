@@ -2,6 +2,7 @@ package rw.afriteck.pms.stock.internal.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.security.CurrentUserService; // adjust to the real package in pms-common
 import rw.afriteck.pms.stock.internal.model.Store;
 
@@ -24,10 +25,15 @@ class BranchGuard {
     private final CurrentUserService currentUser;
 
     /** The caller's branch, from the token. Throws if there is no authenticated user or no branch claim. */
+    /** The caller's branch, from the token. Throws if there is no authenticated user or no branch claim. */
     UUID currentBranchId() {
-        return currentUser.requireCurrentHotelBranchId();
+        UUID branchId = currentUser.requireCurrentHotelBranchId();
+        if (branchId == null) {
+            throw new ForbiddenException("BRANCH_REQUIRED",
+                    "This operation needs an account assigned to a branch");
+        }
+        return branchId;
     }
-
     /** True when the store belongs to the caller's branch. */
     boolean inCurrentBranch(Store store) {
         return currentBranchId().equals(store.getBranch().getId());

@@ -1,6 +1,7 @@
 package rw.afriteck.pms.stock.internal.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.security.CurrentUserService; // adjust to the real package in pms-common
 import rw.afriteck.pms.property.model.HotelBranch;
 import rw.afriteck.pms.stock.internal.model.Store;
@@ -28,6 +30,16 @@ class BranchGuardTest {
         assertThat(guard.currentBranchId()).isEqualTo(mine);
         assertThat(guard.inCurrentBranch(storeIn(mine))).isTrue();
         assertThat(guard.inCurrentBranch(storeIn(UUID.randomUUID()))).isFalse();
+    }
+
+    @Test
+    void refusesAnAccountWithNoBranch() {
+        when(currentUser.requireCurrentHotelBranchId()).thenReturn(null);
+        BranchGuard guard = new BranchGuard(currentUser);
+
+        assertThatThrownBy(guard::currentBranchId).isInstanceOf(ForbiddenException.class);
+        assertThatThrownBy(() -> guard.inCurrentBranch(storeIn(UUID.randomUUID())))
+                .isInstanceOf(ForbiddenException.class);
     }
 
     private static Store storeIn(UUID branchId) {

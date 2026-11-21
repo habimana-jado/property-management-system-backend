@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.stock.api.enums.EOutletType;
 
 import java.util.UUID;
@@ -16,7 +17,7 @@ import java.util.UUID;
         })
 @Getter
 @Setter
-public class StoreAssignment extends Auditable {
+public class StoreAssignment extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

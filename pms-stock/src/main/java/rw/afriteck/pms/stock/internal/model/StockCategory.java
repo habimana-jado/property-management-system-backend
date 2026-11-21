@@ -4,20 +4,23 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 
 import java.util.UUID;
 
 @Entity
-@Table(name = "stock_category")
+@Table(name = "stock_category",
+        uniqueConstraints = @UniqueConstraint(name = "uk_stock_category_hotel_code",
+                columnNames = {"hotel_id", "code"}))
 @Getter
 @Setter
-public class StockCategory extends Auditable {
+public class StockCategory extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String code;
 
     @Column(nullable = false)

@@ -6,4 +6,6 @@ public interface HotelDirectory {
     boolean isHotelActive(UUID hotelId);
 
     boolean branchBelongsToHotel(UUID branchId, UUID hotelId);
+
+    String hotelCodeOf(UUID hotelId);
 }

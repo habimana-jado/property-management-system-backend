@@ -3,7 +3,10 @@ package rw.afriteck.pms.architecture;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
+import rw.afriteck.pms.common.tenant.TenantOwned;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 @AnalyzeClasses(packages = "rw.afriteck.pms")
@@ -34,4 +37,13 @@ class ModulesBoundaryTest {
     static final ArchRule nobody_depends_on_platform =
             noClasses().that().resideOutsideOfPackage("rw.afriteck.pms.platform..")
                     .should().dependOnClassesThat().resideInAPackage("rw.afriteck.pms.platform..");
+
+    @ArchTest
+    static final ArchRule entities_in_tenant_modules_are_tenant_owned =
+            classes().that().areAnnotatedWith(jakarta.persistence.Entity.class)
+                    .and().resideInAnyPackage("rw.afriteck.pms.restaurant..", "rw.afriteck.pms.pos..",
+                            "rw.afriteck.pms.payment..", "rw.afriteck.pms.credit..", "rw.afriteck.pms.stock..")
+                    .and().doNotHaveSimpleName("UnitOfMeasure")      // global reference data, by design
+                    .should().beAssignableTo(TenantOwned.class)
+                    .orShould().beAssignableTo(AuditableTenantOwned.class);
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -13,7 +14,7 @@ import java.util.UUID;
         uniqueConstraints = @UniqueConstraint(columnNames = {"stocktake_id", "item_id"}))
 @Getter
 @Setter
-public class StocktakeLine extends Auditable {
+public class StocktakeLine extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 import rw.afriteck.pms.property.model.HotelBranch;
 
 import java.util.UUID;
@@ -13,7 +14,7 @@ import java.util.UUID;
         uniqueConstraints = @UniqueConstraint(columnNames = {"branch_id"}))
 @Getter
 @Setter
-public class BranchStockSetting extends Auditable {
+public class BranchStockSetting extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
