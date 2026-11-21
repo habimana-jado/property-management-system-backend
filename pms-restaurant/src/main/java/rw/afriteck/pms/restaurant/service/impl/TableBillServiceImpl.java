@@ -42,6 +42,7 @@ public class TableBillServiceImpl implements TableBillService {
     private final PaymentMapper paymentMapper;
     private final PaymentService paymentService;
     private final CreditService creditService;
+    private final RestaurantBranchAccess branchAccess;
 
     @Override
     @Transactional
@@ -49,6 +50,8 @@ public class TableBillServiceImpl implements TableBillService {
 
         TableMaster tableMaster = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table Master", tableId));
+
+        branchAccess.require(tableMaster);
 
         Optional<TableBill> activeBill = tableBillRepo.findActiveBillByTableId(tableId, List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED, EBillStatus.PARTIALLY_PAID));
 
@@ -76,6 +79,8 @@ public class TableBillServiceImpl implements TableBillService {
         TableMaster tableMaster = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table Master", tableId));
 
+        branchAccess.require(tableMaster);
+
         List<TableBillItem> tableBillItems = tableBillItemRepo.findByTableBillIdAndStatus(tableBill.getId(), ETableBillItemStatus.ACTIVE);
         if (tableBillItems.isEmpty()) {
             throw new BusinessRuleViolationException("EMPTY_BILL_REQUEST", "Bill Requested cannot be empty Bill");
@@ -98,6 +103,8 @@ public class TableBillServiceImpl implements TableBillService {
 
         TableBill bill = tableBillRepo.findByIdForUpdate(tableBillId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill", tableBillId));
+
+        branchAccess.require(bill);
 
         if (bill.getBillStatus() == EBillStatus.PAID || bill.getBillStatus() == EBillStatus.CANCELLED) {
             throw new BusinessRuleViolationException("INVALID_BILL_STATE", "Bill is already settled or cancelled");
@@ -132,6 +139,8 @@ public class TableBillServiceImpl implements TableBillService {
         TableBill bill = tableBillRepo.findById(tableBillId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill not found", tableBillId));
 
+        branchAccess.require(bill);
+
         if (bill.getBillStatus() != EBillStatus.OPEN && bill.getBillStatus() != EBillStatus.BILL_REQUESTED) {
             throw new BusinessRuleViolationException(
                     "INVALID_BILL_STATE", "Only an active, unpaid bill can be comped");
@@ -161,6 +170,8 @@ public class TableBillServiceImpl implements TableBillService {
 
         TableBill bill = tableBillRepo.findByIdForUpdate(tableBillId)
                 .orElseThrow(() -> new ResourceNotFoundException("Bill", tableBillId));
+
+        branchAccess.require(bill);
 
         if (!List.of(EBillStatus.OPEN, EBillStatus.BILL_REQUESTED, EBillStatus.PARTIALLY_PAID)
                 .contains(bill.getBillStatus())) {

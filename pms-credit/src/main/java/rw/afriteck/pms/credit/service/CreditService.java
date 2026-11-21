@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.credit.dtos.*;
 import rw.afriteck.pms.credit.entity.CreditCustomer;
 import rw.afriteck.pms.credit.entity.Receivable;
@@ -37,6 +38,7 @@ public class CreditService {
     /** Called by domain modules (restaurant, pos) when a sale is closed on credit. */
     @Transactional
     public ReceivableResponse grantCredit(GrantCreditRequest request) {
+        TenantContext.require();
 
         // lock the customer row: serializes limit checks and repayments per customer
         CreditCustomer customer = customerRepository.findByIdForUpdate(request.customerId())
@@ -60,6 +62,7 @@ public class CreditService {
 
         Receivable receivable = new Receivable();
         receivable.setCustomer(customer);
+        receivable.setOriginBranchId(request.originBranchId());
         receivable.setSourceType(request.sourceType());
         receivable.setSourceId(request.sourceId());
         receivable.setSourceReference(request.sourceReference());

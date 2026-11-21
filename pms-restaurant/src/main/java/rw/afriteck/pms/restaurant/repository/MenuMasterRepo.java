@@ -13,21 +13,23 @@ import java.util.UUID;
 public interface MenuMasterRepo extends JpaRepository<MenuMaster, UUID> {
     Page<MenuMaster> findByMenuCategoryRestaurantId(UUID restaurantId, Pageable pageable);
 
+    Page<MenuMaster> findByMenuCategoryRestaurantHotelBranchId(UUID hotelBranchId, Pageable pageable);
+
     @Query("""
-        SELECT m FROM MenuMaster m
-        JOIN FETCH m.menuCategory mc
-        WHERE mc.restaurant.id = :restaurantId AND m.status = 'ACTIVE'
-        ORDER BY m.menuItemName ASC
-    """)
+                SELECT m FROM MenuMaster m
+                JOIN FETCH m.menuCategory mc
+                WHERE mc.restaurant.id = :restaurantId AND m.status = 'ACTIVE'
+                ORDER BY m.menuItemName ASC
+            """)
     List<MenuMaster> findAllActiveByRestaurant(@Param("restaurantId") UUID restaurantId);
 
     @Query("""
-        SELECT m FROM MenuMaster m
-        JOIN FETCH m.menuCategory mc
-        WHERE mc.restaurant.id = :restaurantId AND m.status = 'ACTIVE'
-        AND m.menuItemName ILIKE CONCAT('%', :keyword, '%')
-        ORDER BY m.menuItemName ASC
-        """)
+            SELECT m FROM MenuMaster m
+            JOIN FETCH m.menuCategory mc
+            WHERE mc.restaurant.id = :restaurantId AND m.status = 'ACTIVE'
+            AND m.menuItemName ILIKE CONCAT('%', :keyword, '%')
+            ORDER BY m.menuItemName ASC
+            """)
     List<MenuMaster> searchActiveByRestaurantAndKeyword(
             @Param("restaurantId") UUID restaurantId,
             @Param("keyword") String keyword

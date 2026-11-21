@@ -2,6 +2,7 @@ package rw.afriteck.pms.restaurant.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.restaurant.dtos.CreateRestaurantRequest;
 import rw.afriteck.pms.restaurant.dtos.MenuItemsByCategoryResponse;
 import rw.afriteck.pms.restaurant.dtos.RestaurantResponse;
@@ -15,6 +16,8 @@ public interface RestaurantService {
     RestaurantResponse update(UUID id, CreateRestaurantRequest restaurantRequest);
 
     Page<RestaurantResponse> findAll(Pageable pageable);
+
+    Page<RestaurantResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable);
 
     RestaurantResponse findOne(UUID restaurantId);
 

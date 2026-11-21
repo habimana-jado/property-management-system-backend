@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.common.security.CurrentUserService;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.credit.dtos.CreateCreditCustomerRequest;
 import rw.afriteck.pms.credit.dtos.CreditCustomerResponse;
 import rw.afriteck.pms.credit.entity.CreditCustomer;
@@ -31,9 +32,10 @@ public class CreditCustomerService {
 
     @Transactional
     public CreditCustomerResponse create(CreateCreditCustomerRequest request) {
+        TenantContext.require();
         String phone = phoneNormalizer.normalize(request.phoneNumber());
 
-        if (customerRepository.existsByHotelBranchIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phone)) {
+        if (customerRepository.existsByPhoneNumber(phone)) {
             throw new BusinessRuleViolationException("DUPLICATE_PHONE", "A customer with this phone number already exists");
         }
 
@@ -42,15 +44,14 @@ public class CreditCustomerService {
         customer.setPhoneNumber(phone);
         customer.setCreditLimit(request.creditLimit());
         customer.setCreditAllowed(request.creditLimit().signum() > 0);
-        customer.setHotelBranchId(currentUserService.requireCurrentHotelBranchId());
-        customerRepository.save(customer);
+        customerRepository.save(customer);   // Hibernate fills hotel_id from the tenant
 
         return toResponse(customer);
     }
 
     @Transactional(readOnly = true)
     public CreditCustomerResponse findByPhone(String rawPhone) {
-        CreditCustomer customer = customerRepository.findByHotelBranchIdAndPhoneNumber(currentUserService.requireCurrentHotelBranchId(), phoneNormalizer.normalize(rawPhone))
+        CreditCustomer customer = customerRepository.findByPhoneNumber(phoneNormalizer.normalize(rawPhone))
                 .orElseThrow(() -> new ResourceNotFoundException("Customer", rawPhone));
         return toResponse(customer);
     }

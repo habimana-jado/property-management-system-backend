@@ -9,4 +9,6 @@ import java.util.UUID;
 
 public interface MenuCategoryRepo extends JpaRepository<MenuCategory, UUID> {
     Page<MenuCategory> findByRestaurantId(UUID restaurantId, Pageable pageable);
+
+    Page<MenuCategory> findByRestaurantHotelBranchId(UUID hotelBranchId, Pageable pageable);
 }

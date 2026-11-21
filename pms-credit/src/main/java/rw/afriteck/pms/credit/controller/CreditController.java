@@ -54,8 +54,7 @@ public class CreditController {
     }
 
     @GetMapping("/reports/aging")
-    // @PreAuthorize: CREDIT_REPORT_VIEW
-    public ResponseEntity<AgingReportResponse> agingReport(@RequestParam UUID hotelId) {
-        return ResponseEntity.ok(reportService.agingReport(hotelId, LocalDate.now()));
+    public ResponseEntity<AgingReportResponse> agingReport(@RequestParam(required = false) UUID branchId) {
+        return ResponseEntity.ok(reportService.agingReport(branchId, LocalDate.now()));
     }
 }

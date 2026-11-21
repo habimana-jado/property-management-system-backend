@@ -37,12 +37,15 @@ public class RestaurantServiceImpl implements RestaurantService {
     private final BillNumberCounterRepo billNumberCounterRepo;
     private final MenuMasterRepo menuMasterRepo;
     private final MenuMasterMapper menuMasterMapper;
+    private final RestaurantBranchAccess branchAccess;
 
     @Override
     @Transactional
     public RestaurantResponse create(CreateRestaurantRequest request) {
         HotelBranch hotelBranch = hotelBranchRepo.findById(request.hotelBranchId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", request.hotelBranchId()));
+        branchAccess.requireBranch(hotelBranch.getId());
+
         Restaurant restaurant = this.restaurantMapper.toEntity(request);
         restaurant.setHotelBranch(hotelBranch);
         restaurant.setStatus(ERecordStatus.ACTIVE);
@@ -67,8 +70,12 @@ public class RestaurantServiceImpl implements RestaurantService {
         HotelBranch hotelBranch = hotelBranchRepo.findById(restaurantRequest.hotelBranchId())
                 .orElseThrow(()->new ResourceNotFoundException("Hotel Branch", restaurantRequest.hotelBranchId()));
 
+        branchAccess.requireBranch(hotelBranch.getId());
+
         Restaurant restaurant = restaurantRepo.findById(id)
                         .orElseThrow(()->new ResourceNotFoundException("Restaurant", id));
+
+        branchAccess.require(restaurant);
 
         restaurantMapper.updateEntityFromRequest(restaurantRequest, restaurant);
 
@@ -76,10 +83,17 @@ public class RestaurantServiceImpl implements RestaurantService {
         return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public Page<RestaurantResponse> findAll(Pageable pageable) {
         return restaurantRepo.findAll(pageable)
+                .map(restaurantMapper::toResponse);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<RestaurantResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable) {
+        return restaurantRepo.findByHotelBranchId(hotelBranchId, pageable)
                 .map(restaurantMapper::toResponse);
     }
 
@@ -87,6 +101,8 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantResponse findOne(UUID restaurantId) {
         Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+        branchAccess.require(restaurant);
+
         return restaurantMapper.toResponse(restaurant);
     }
 
@@ -105,7 +121,10 @@ public class RestaurantServiceImpl implements RestaurantService {
                 ));
 
         return grouped.entrySet().stream()
-                .sorted(Comparator.comparing(e -> e.getKey().getDisplayOrder()))
+                .sorted(Comparator
+                        .comparing((Map.Entry<MenuCategory, List<MenuMaster>> e) -> e.getKey().getDisplayOrder(),
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(e -> e.getKey().getName()))
                 .map(e -> new MenuItemsByCategoryResponse(
                         e.getKey().getName(),
                         e.getValue().stream().map(menuMasterMapper::toSearchResponse).toList()
@@ -116,6 +135,9 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantResponse activate(UUID restaurantId) {
         Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+
+        branchAccess.require(restaurant);
+
         restaurant.setStatus(ERecordStatus.ACTIVE);
         return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
@@ -124,6 +146,8 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantResponse deactivate(UUID restaurantId) {
         Restaurant restaurant = restaurantRepo.findById(restaurantId)
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", restaurantId));
+        branchAccess.require(restaurant);
+
         restaurant.setStatus(ERecordStatus.INACTIVE);
         return restaurantMapper.toResponse(restaurantRepo.save(restaurant));
     }
@@ -131,6 +155,8 @@ public class RestaurantServiceImpl implements RestaurantService {
     @Override
     @Transactional(readOnly = true)
     public Page<RestaurantResponse> findByHotelBranchAndActive(UUID hotelBranchId, Pageable pageable) {
+        branchAccess.requireBranch(hotelBranchId);
+
         return restaurantRepo.findByHotelBranchIdAndStatus(hotelBranchId, ERecordStatus.ACTIVE, pageable)
                 .map(restaurantMapper::toResponse);
     }

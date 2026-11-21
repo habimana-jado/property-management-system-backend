@@ -21,18 +21,14 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CreditReportServiceTest {
 
-    @Mock
-    ReceivableRepository receivableRepository;
-    @InjectMocks
-    CreditReportService reportService;
+    @Mock ReceivableRepository receivableRepository;
+    @InjectMocks CreditReportService reportService;
 
     private static final LocalDate AS_OF = LocalDate.of(2026, 11, 17);
     private final UUID hotelId = UUID.randomUUID();
@@ -52,15 +48,13 @@ class CreditReportServiceTest {
         Receivable b1 = CreditTestData.receivable(b, "30000", "0",
                 EReceivableStatus.OUTSTANDING, AS_OF.minusDays(100), Instant.now());
 
-        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any()))
-                .thenReturn(List.of(a1, a2, b1));
+        when(receivableRepository.findActiveWithCustomer(anyList())).thenReturn(List.of(a1, a2, b1));
 
-        AgingReportResponse report = reportService.agingReport(hotelId, AS_OF);
+        AgingReportResponse report = reportService.agingReport(null, AS_OF);
 
         assertThat(report.asOf()).isEqualTo(AS_OF);
         assertThat(report.customers()).hasSize(2);
 
-        // largest debtor first (B owes 30,000, A owes 20,000)
         CustomerAgingRow first = report.customers().get(0);
         CustomerAgingRow second = report.customers().get(1);
         assertThat(first.customerId()).isEqualTo(b.getId());
@@ -81,13 +75,13 @@ class CreditReportServiceTest {
 
     @Test
     void agingReport_onlyRequestsActiveDebts() {
-        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any())).thenReturn(List.of());
+        when(receivableRepository.findActiveWithCustomer(anyList())).thenReturn(List.of());
 
-        reportService.agingReport(hotelId, AS_OF);
+        reportService.agingReport(null, AS_OF);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<EReceivableStatus>> captor = ArgumentCaptor.forClass(List.class);
-        verify(receivableRepository).findActiveByHotelBranchWithCustomer(eq(hotelId), captor.capture());
+        verify(receivableRepository).findActiveWithCustomer(captor.capture());
 
         // guards against someone adding SETTLED or WRITTEN_OFF to the report by accident
         assertThat(captor.getValue())
@@ -95,10 +89,22 @@ class CreditReportServiceTest {
     }
 
     @Test
-    void agingReport_returnsZeroedTotalsWhenNothingIsOwed() {
-        when(receivableRepository.findActiveByHotelBranchWithCustomer(eq(hotelId), any())).thenReturn(List.of());
+    void agingReport_usesTheBranchQueryWhenABranchIsGiven() {
+        UUID branchId = UUID.randomUUID();
+        when(receivableRepository.findActiveByOriginBranchWithCustomer(eq(branchId), anyList()))
+                .thenReturn(List.of());
 
-        AgingReportResponse report = reportService.agingReport(hotelId, AS_OF);
+        reportService.agingReport(branchId, AS_OF);
+
+        verify(receivableRepository).findActiveByOriginBranchWithCustomer(eq(branchId), anyList());
+        verify(receivableRepository, never()).findActiveWithCustomer(anyList());
+    }
+
+    @Test
+    void agingReport_returnsZeroedTotalsWhenNothingIsOwed() {
+        when(receivableRepository.findActiveWithCustomer(anyList())).thenReturn(List.of());
+
+        AgingReportResponse report = reportService.agingReport(null, AS_OF);
 
         assertThat(report.customers()).isEmpty();
         assertThat(report.grandTotals().total()).isEqualByComparingTo("0");

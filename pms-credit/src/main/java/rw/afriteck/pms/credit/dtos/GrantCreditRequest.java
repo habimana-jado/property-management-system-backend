@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record GrantCreditRequest(
-        @NotNull UUID hotelBranchId,
+        @NotNull UUID originBranchId,
         @NotNull UUID customerId,
         @NotNull EPayableType sourceType,
         @NotNull UUID sourceId,

@@ -50,10 +50,13 @@ public class RestaurantController {
     }
 
     @GetMapping
+    public ResponseEntity<Page<RestaurantResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return ResponseEntity.ok(restaurantService.findAll(pageable));
+    }
+
+    @GetMapping
     public ResponseEntity<Page<RestaurantResponse>> findByHotelBranch(@RequestParam UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable){
-        return hotelBranchId != null
-                ? ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(hotelBranchId, pageable))
-                : ResponseEntity.ok(this.restaurantService.findAll(pageable));
+        return ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(hotelBranchId, pageable));
     }
 
     @GetMapping("/{id}")

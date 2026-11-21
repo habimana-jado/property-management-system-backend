@@ -49,6 +49,11 @@ public class MenuMasterController {
         return ResponseEntity.ok(menuMasterService.findAll(pageable));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<MenuMasterResponse>> findByHotelBranch(@PathVariable("hotelBranchId") UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable){
+        return ResponseEntity.ok(menuMasterService.findByHotelBranchId(hotelBranchId, pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MenuMasterResponse> findOne(@PathVariable("id") UUID id){
         return ResponseEntity.ok(menuMasterService.findOne(id));

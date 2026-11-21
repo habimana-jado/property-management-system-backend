@@ -1,6 +1,6 @@
 package rw.afriteck.pms.credit;
 
-import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import rw.afriteck.pms.common.enums.EPayableType;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
+import rw.afriteck.pms.common.exception.ForbiddenException;
+import rw.afriteck.pms.common.tenant.TenantContext;
 import rw.afriteck.pms.credit.dtos.GrantCreditRequest;
 import rw.afriteck.pms.credit.entity.CreditCustomer;
 import rw.afriteck.pms.credit.entity.Receivable;
@@ -24,6 +26,8 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -46,8 +50,14 @@ class CreditServiceGrantTest {
     @BeforeEach
     void setUp() {
         customer = CreditTestData.customer(hotelId, "50000");
-        when(customerRepository.findByIdForUpdate(customer.getId())).thenReturn(Optional.of(customer));
+        lenient().when(customerRepository.findByIdForUpdate(customer.getId())).thenReturn(Optional.of(customer));
     }
+
+    @BeforeEach
+    void setTenant() { TenantContext.set(hotelId); }
+
+    @AfterEach
+    void clearTenant() { TenantContext.clear(); }
 
     // single place to adapt if GrantCreditRequest's component order differs
     private GrantCreditRequest request(String amount, LocalDate dueDate) {
@@ -67,10 +77,10 @@ class CreditServiceGrantTest {
         verify(receivableRepository).save(captor.capture());
         Receivable saved = captor.getValue();
 
-        Assertions.assertThat(saved.getCustomer()).isSameAs(customer);
-        Assertions.assertThat(saved.getOriginalAmount()).isEqualByComparingTo("15000");
-        Assertions.assertThat(saved.getAmountPaid()).isEqualByComparingTo("0");
-        Assertions.assertThat(saved.getStatus()).isEqualTo(EReceivableStatus.OUTSTANDING);
+        assertThat(saved.getCustomer()).isSameAs(customer);
+        assertThat(saved.getOriginalAmount()).isEqualByComparingTo("15000");
+        assertThat(saved.getAmountPaid()).isEqualByComparingTo("0");
+        assertThat(saved.getStatus()).isEqualTo(EReceivableStatus.OUTSTANDING);
     }
 
     @Test
@@ -90,7 +100,7 @@ class CreditServiceGrantTest {
         when(receivableRepository.sumOutstandingByCustomer(eq(customer.getId()), any()))
                 .thenReturn(new BigDecimal("40000"));
 
-        Assertions.assertThatThrownBy(() -> creditService.grantCredit(request("10000.01", LocalDate.now().plusDays(7))))
+        assertThatThrownBy(() -> creditService.grantCredit(request("10000.01", LocalDate.now().plusDays(7))))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
         verify(receivableRepository, never()).save(any());
@@ -100,7 +110,7 @@ class CreditServiceGrantTest {
     void grantCredit_rejectsDuplicateGrantForSameSource() {
         when(receivableRepository.existsBySourceTypeAndSourceId(any(), any())).thenReturn(true);
 
-        Assertions.assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().plusDays(7))))
+        assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().plusDays(7))))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
         verify(receivableRepository, never()).save(any());
@@ -110,7 +120,7 @@ class CreditServiceGrantTest {
     void grantCredit_rejectsCustomerWithoutCreditPermission() {
         customer.setCreditAllowed(false);
 
-        Assertions.assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().plusDays(7))))
+        assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().plusDays(7))))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
         verify(receivableRepository, never()).save(any());
@@ -118,21 +128,33 @@ class CreditServiceGrantTest {
 
     @Test
     void grantCredit_rejectsPastDueDate() {
-        Assertions.assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().minusDays(1))))
+        assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().minusDays(1))))
                 .isInstanceOf(BusinessRuleViolationException.class);
 
         verify(receivableRepository, never()).save(any());
     }
 
     @Test
-    void grantCredit_rejectsCustomerFromAnotherHotel() {
-        GrantCreditRequest otherHotel = new GrantCreditRequest(UUID.randomUUID(), customer.getId(),
-                EPayableType.TABLE_BILL, UUID.randomUUID(), "MNB-000002",
-                new BigDecimal("1000"), LocalDate.now().plusDays(7));
+    void grantCredit_storesTheOriginBranch() {
+        when(receivableRepository.existsBySourceTypeAndSourceId(any(), any())).thenReturn(false);
+        when(receivableRepository.sumOutstandingByCustomer(eq(customer.getId()), any())).thenReturn(BigDecimal.ZERO);
+        UUID branchId = UUID.randomUUID();
 
-        Assertions.assertThatThrownBy(() -> creditService.grantCredit(otherHotel))
-                .isInstanceOf(BusinessRuleViolationException.class);
+        creditService.grantCredit(new GrantCreditRequest(branchId, customer.getId(), EPayableType.TABLE_BILL,
+                UUID.randomUUID(), "MNB-000001", new BigDecimal("1000"), LocalDate.now().plusDays(7)));
 
-        verify(receivableRepository, never()).save(any());
+        ArgumentCaptor<Receivable> captor = ArgumentCaptor.forClass(Receivable.class);
+        verify(receivableRepository).save(captor.capture());
+        assertThat(captor.getValue().getOriginBranchId()).isEqualTo(branchId);
+    }
+
+    @Test
+    void grantCredit_refusesToRunWithoutATenant() {
+        TenantContext.clear();
+
+        assertThatThrownBy(() -> creditService.grantCredit(request("1000", LocalDate.now().plusDays(7))))
+                .isInstanceOf(ForbiddenException.class);
+
+        verifyNoInteractions(receivableRepository);
     }
 }

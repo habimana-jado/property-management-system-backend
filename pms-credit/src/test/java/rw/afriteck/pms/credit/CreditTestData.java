@@ -10,16 +10,18 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.springframework.test.util.ReflectionTestUtils;   // part of spring-boot-starter-test
+
 final class CreditTestData {
 
     private CreditTestData() {}
 
     static CreditCustomer customer(UUID hotelId, String creditLimit) {
         CreditCustomer c = new CreditCustomer();
-        c.setId(UUID.randomUUID()); // @GeneratedValue doesn't run in unit tests
-        c.setHotelBranchId(hotelId);
+        c.setId(UUID.randomUUID());
+        ReflectionTestUtils.setField(c, "hotelId", hotelId);   // no setter by design
         c.setFullName("Test Customer");
-        c.setPhoneNumber("+250788000001");
+        c.setPhoneNumber("+10000000001");
         c.setCreditAllowed(true);
         c.setActive(true);
         c.setCreditLimit(new BigDecimal(creditLimit));

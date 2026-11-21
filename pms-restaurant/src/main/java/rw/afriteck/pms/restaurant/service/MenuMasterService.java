@@ -2,6 +2,7 @@ package rw.afriteck.pms.restaurant.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.restaurant.dtos.CreateMenuMasterRequest;
 import rw.afriteck.pms.restaurant.dtos.MenuMasterResponse;
 
@@ -14,6 +15,8 @@ public interface MenuMasterService {
     MenuMasterResponse update(UUID id, CreateMenuMasterRequest menuMasterRequest);
 
     Page<MenuMasterResponse> findAll(Pageable pageable);
+
+    Page<MenuMasterResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable);
 
     MenuMasterResponse findOne(UUID menuMasterId);
 

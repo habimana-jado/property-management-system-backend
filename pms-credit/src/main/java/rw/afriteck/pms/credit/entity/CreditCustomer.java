@@ -5,17 +5,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import rw.afriteck.pms.common.audit.Auditable;
+import rw.afriteck.pms.common.tenant.AuditableTenantOwned;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
 @Table(name = "credit_customers",
-        uniqueConstraints = @UniqueConstraint(name = "uk_credit_customer_hotel_branch_phone", columnNames = {"hotel_branch_id", "phone_number"}))
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_credit_customer_hotel_phone",
+                columnNames = {"hotel_id", "phone_number"}))
 @Getter
 @Setter
 @NoArgsConstructor
-public class CreditCustomer extends Auditable {
+public class CreditCustomer extends AuditableTenantOwned {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,6 +39,6 @@ public class CreditCustomer extends Auditable {
     @Column(nullable = false)
     private boolean active = true;
 
-    @Column(name = "hotel_branch_id", nullable = false)
-    private UUID hotelBranchId;
+    @Column(name = "hotel_id", nullable = false)
+    private UUID hotelId;
 }

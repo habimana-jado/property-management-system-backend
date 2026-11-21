@@ -88,6 +88,11 @@ public class TableMasterController {
         return ResponseEntity.ok(tableMasterService.findAll(pageable));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<TableMasterResponse>> findByHotelBranch(@PathVariable("hotelBranchId") UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable) {
+        return ResponseEntity.ok(tableMasterService.findByHotelBranchId(hotelBranchId, pageable));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TableMasterResponse> findOne(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(tableMasterService.findOne(id));

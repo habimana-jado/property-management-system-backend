@@ -26,17 +26,22 @@ public class TableMasterServiceImpl implements TableMasterService {
     private final TableMasterRepo tableMasterRepo;
     private final RestaurantRepo restaurantRepo;
     private final TableMasterMapper tableMasterMapper;
+    private final RestaurantBranchAccess branchAccess;
 
     @Override
     @Transactional
     public TableMasterResponse register(CreateTableMasterRequest tableMasterRequest) {
         Restaurant restaurant = restaurantRepo.findById(tableMasterRequest.restaurantId())
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", tableMasterRequest.restaurantId()));
+
+        branchAccess.require(restaurant);
+
         TableMaster tableMaster = tableMasterMapper.toEntity(tableMasterRequest);
         tableMaster.setTableStatus(ETableStatus.AVAILABLE);
         tableMaster.setRecordStatus(ERecordStatus.ACTIVE);
         tableMaster.setRestaurant(restaurant);
         TableMaster saved = tableMasterRepo.save(tableMaster);
+
         return tableMasterMapper.toResponse(saved);
     }
 
@@ -45,8 +50,13 @@ public class TableMasterServiceImpl implements TableMasterService {
     public TableMasterResponse update(UUID id, CreateTableMasterRequest tableMasterRequest) {
         TableMaster tableMaster = tableMasterRepo.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Table Master", id));
+
+        branchAccess.require(tableMaster);
+
         Restaurant restaurant = restaurantRepo.findById(tableMasterRequest.restaurantId())
                 .orElseThrow(()->new ResourceNotFoundException("Restaurant", tableMasterRequest.restaurantId()));
+
+        branchAccess.require(restaurant);
 
         tableMasterMapper.updateEntityFromRequest(tableMasterRequest, tableMaster);
 
@@ -54,17 +64,27 @@ public class TableMasterServiceImpl implements TableMasterService {
         return tableMasterMapper.toResponse(tableMasterRepo.save(tableMaster));
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public Page<TableMasterResponse> findAll(Pageable pageable) {
         return tableMasterRepo.findAll(pageable)
                 .map(tableMasterMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Page<TableMasterResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable) {
+        return tableMasterRepo.findByRestaurantHotelBranchId(hotelBranchId, pageable)
+                .map(tableMasterMapper::toResponse);
+    }
+
     @Override
     public TableMasterResponse findOne(UUID tableId) {
-        return tableMasterMapper.toResponse(tableMasterRepo.findById(tableId)
-                .orElseThrow(()->new ResourceNotFoundException("Table Master", tableId)));
+        TableMaster tableMaster = tableMasterRepo.findById(tableId)
+                .orElseThrow(()->new ResourceNotFoundException("Table Master", tableId));
+        branchAccess.require(tableMaster);
+
+        return tableMasterMapper.toResponse(tableMaster);
     }
 
     @Override
@@ -79,6 +99,9 @@ public class TableMasterServiceImpl implements TableMasterService {
     public TableMasterResponse changeStatus(UUID tableId, ETableStatus status) {
         TableMaster tableMaster = tableMasterRepo.findById(tableId)
                 .orElseThrow(()->new ResourceNotFoundException("Table Master", tableId));
+
+        branchAccess.require(tableMaster);
+
         tableMaster.setTableStatus(status);
         TableMaster saved = tableMasterRepo.save(tableMaster);
         return tableMasterMapper.toResponse(saved);
@@ -88,6 +111,8 @@ public class TableMasterServiceImpl implements TableMasterService {
     public TableMasterResponse activate(UUID id) {
         TableMaster tableMaster = tableMasterRepo.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Table Master", id));
+        branchAccess.require(tableMaster);
+
         tableMaster.setRecordStatus(ERecordStatus.ACTIVE);
         TableMaster saved = tableMasterRepo.save(tableMaster);
         return tableMasterMapper.toResponse(saved);
@@ -97,6 +122,8 @@ public class TableMasterServiceImpl implements TableMasterService {
     public TableMasterResponse deactivate(UUID id) {
         TableMaster tableMaster = tableMasterRepo.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Table Master", id));
+        branchAccess.require(tableMaster);
+
         tableMaster.setRecordStatus(ERecordStatus.INACTIVE);
         TableMaster saved = tableMasterRepo.save(tableMaster);
         return tableMasterMapper.toResponse(saved);

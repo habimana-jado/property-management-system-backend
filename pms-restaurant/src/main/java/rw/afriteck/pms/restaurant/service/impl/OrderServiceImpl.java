@@ -57,6 +57,7 @@ public class OrderServiceImpl implements OrderService {
     private final PaymentService paymentService;
     private final StockApi stockApi;
     private final CurrentUserService currentUserService;
+    private final RestaurantBranchAccess branchAccess;
 
     @Override
     @Transactional
@@ -65,6 +66,7 @@ public class OrderServiceImpl implements OrderService {
         TableMaster table = tableMasterRepo.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("Table", tableId));
 
+        branchAccess.require(table);
         validateTableCanAcceptOrder(table);
 
         List<UUID> menuItemIds = orderRequest.orderLineRequests().stream()
@@ -121,6 +123,8 @@ public class OrderServiceImpl implements OrderService {
 
         TableBill bill = item.getTableBill();
 
+        branchAccess.require(bill);
+
         if (bill.getBillStatus() != EBillStatus.OPEN && bill.getBillStatus() != EBillStatus.BILL_REQUESTED) {
             throw new BusinessRuleViolationException(
                     "INVALID_BILL_STATE", "Cannot void an item on a bill that is not active");
@@ -159,6 +163,9 @@ public class OrderServiceImpl implements OrderService {
 
         TableMaster targetTable = tableMasterRepo.findById(request.targetTableId())
                 .orElseThrow(() -> new ResourceNotFoundException("Target table not found", request.targetTableId()));
+
+        branchAccess.require(sourceTable);
+        branchAccess.require(targetTable);
 
         // Rule: same restaurant only
         if (!sourceTable.getRestaurant().getId().equals(targetTable.getRestaurant().getId())) {
@@ -232,6 +239,9 @@ public class OrderServiceImpl implements OrderService {
         TableMaster sourceTable = tableMasterRepo.findById(request.sourceTableId())
                 .orElseThrow(() -> new ResourceNotFoundException("Source Table",request.sourceTableId()));
 
+        branchAccess.require(destinationTable);
+        branchAccess.require(sourceTable);
+
         if (destinationTable.getId().equals(sourceTable.getId())) {
             throw new BusinessRuleViolationException("TABLE_CONFLICT","Cannot merge a table into itself");
         }
@@ -292,28 +302,16 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private TableBill retrieveOrCreateActiveBill(TableMaster table){
+    TableBill retrieveOrCreateActiveBill(TableMaster table) {
 
         TableBill bill = tableBillRepo.findActiveBillByTableId(table.getId(), ACTIVE_BILL_STATUSES)
                 .orElseGet(() -> openNewBill(table));
 
         if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
-            bill.setBillStatus(EBillStatus.OPEN); // snapshot invalidated — new item is coming
+            bill.setBillStatus(EBillStatus.OPEN); // snapshot invalidated: a new item is coming
         }
 
-        if(table.getTableStatus().equals(ETableStatus.BILLED)){
-            table.setTableStatus(ETableStatus.OCCUPIED);
-            tableMasterRepo.save(table);
-        }
-
-        // Check if Table had Requested Bill and has decided to continue ordering on the same Bill
-        if (bill.getBillStatus() == EBillStatus.BILL_REQUESTED) {
-            bill.setBillStatus(EBillStatus.OPEN);
-
-            return tableBillRepo.save(bill);
-        }
-
-        if(table.getTableStatus().equals(ETableStatus.BILLED)){
+        if (table.getTableStatus().equals(ETableStatus.BILLED)) {
             table.setTableStatus(ETableStatus.OCCUPIED);
             tableMasterRepo.save(table);
         }

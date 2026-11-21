@@ -10,4 +10,6 @@ import java.util.UUID;
 
 public interface TableMasterRepo extends JpaRepository<TableMaster, UUID> {
     Page<TableMaster> findByRestaurantIdAndRecordStatus(UUID restaurantId, ERecordStatus recordStatus, Pageable pageable);
+
+    Page<TableMaster> findByRestaurantHotelBranchId(UUID hotelBranchId, Pageable pageable);
 }

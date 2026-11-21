@@ -27,6 +27,7 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     private final MenuMasterMapper menuMasterMapper;
     private final MenuCategoryRepo menuCategoryRepo;
     private final StockCatalogApi stockCatalogApi;
+    private final RestaurantBranchAccess branchAccess;
 
     @Override
     @Transactional
@@ -35,6 +36,8 @@ public class MenuMasterServiceImpl implements MenuMasterService {
 
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
+
+        branchAccess.require(menuCategory.getRestaurant());
 
         MenuMaster menuMaster = menuMasterMapper.toEntity(menuMasterRequest);
         menuMaster.setMenuCategory(menuCategory);
@@ -49,24 +52,38 @@ public class MenuMasterServiceImpl implements MenuMasterService {
         MenuCategory menuCategory = menuCategoryRepo.findById(menuMasterRequest.menuCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Category", menuMasterRequest.menuCategoryId()));
 
+        branchAccess.require(menuCategory.getRestaurant());
+
         MenuMaster menuMaster = menuMasterRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Master", id));
+
+        branchAccess.require(menuMaster.getMenuCategory().getRestaurant());
 
         menuMasterMapper.updateEntityFromRequest(menuMasterRequest, menuMaster);
         menuMaster.setMenuCategory(menuCategory);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));
     }
 
-    @Override
     @Transactional(readOnly = true)
+    @Override
     public Page<MenuMasterResponse> findAll(Pageable pageable) {
         return menuMasterRepo.findAll(pageable)
                 .map(menuMasterMapper::toResponse);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Page<MenuMasterResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable) {
+        return menuMasterRepo.findByMenuCategoryRestaurantHotelBranchId(hotelBranchId, pageable)
+                .map(menuMasterMapper::toResponse);
+    }
+
     @Override
     public MenuMasterResponse findOne(UUID menuMasterId) {
-        return menuMasterMapper.toResponse(menuMasterRepo.findById(menuMasterId).orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId)));
+        MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
+        branchAccess.require(menuMaster.getMenuCategory().getRestaurant());
+        return menuMasterMapper.toResponse(menuMaster);
     }
 
     @Override
@@ -91,6 +108,8 @@ public class MenuMasterServiceImpl implements MenuMasterService {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
 
+        branchAccess.require(menuMaster.getMenuCategory().getRestaurant());
+
         menuMaster.setStatus(ERecordStatus.ACTIVE);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));
     }
@@ -99,6 +118,8 @@ public class MenuMasterServiceImpl implements MenuMasterService {
     public MenuMasterResponse deactivate(UUID menuMasterId) {
         MenuMaster menuMaster = menuMasterRepo.findById(menuMasterId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu Master", menuMasterId));
+
+        branchAccess.require(menuMaster.getMenuCategory().getRestaurant());
 
         menuMaster.setStatus(ERecordStatus.INACTIVE);
         return menuMasterMapper.toResponse(menuMasterRepo.save(menuMaster));

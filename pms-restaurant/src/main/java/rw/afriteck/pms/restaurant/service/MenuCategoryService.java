@@ -14,6 +14,8 @@ public interface MenuCategoryService {
 
     Page<MenuCategoryResponse> findAll(Pageable pageable);
 
+    Page<MenuCategoryResponse> findByHotelBranchId(UUID hotelBranchId, Pageable pageable);
+
     MenuCategoryResponse findOne(UUID id);
 
     Page<MenuCategoryResponse> findByRestaurant(UUID restaurantId, Pageable pageable);

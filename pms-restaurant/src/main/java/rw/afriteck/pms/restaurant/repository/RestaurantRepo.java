@@ -10,4 +10,6 @@ import java.util.UUID;
 
 public interface RestaurantRepo extends JpaRepository<Restaurant, UUID> {
     Page<Restaurant> findByHotelBranchIdAndStatus(UUID hotelBranchId, ERecordStatus status, Pageable pageable);
+
+    Page<Restaurant> findByHotelBranchId(UUID hotelBranchId, Pageable pageable);
 }

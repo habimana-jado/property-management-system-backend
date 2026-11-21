@@ -7,4 +7,5 @@ import java.util.UUID;
 
 public record CreateMenuCategoryRequest(
         @NotBlank String name,
-        @NotNull UUID restaurantId) {}
+        @NotNull UUID restaurantId,
+        Integer displayOrder) {}

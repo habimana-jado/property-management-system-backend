@@ -28,10 +28,12 @@ public interface ReceivableRepository extends JpaRepository<Receivable, UUID> {
     @Query("SELECT r.customer.id FROM Receivable r WHERE r.id = :id")
     Optional<UUID> findCustomerIdById(@Param("id") UUID id);
 
+    @Query("SELECT r FROM Receivable r JOIN FETCH r.customer WHERE r.status IN :statuses")
+    List<Receivable> findActiveWithCustomer(@Param("statuses") List<EReceivableStatus> statuses);
+
     @Query("""
-    SELECT r FROM Receivable r JOIN FETCH r.customer c
-    WHERE c.hotelBranchId = :hotelBranchId AND r.status IN :statuses
+    SELECT r FROM Receivable r JOIN FETCH r.customer
+    WHERE r.originBranchId = :branchId AND r.status IN :statuses
     """)
-    List<Receivable> findActiveByHotelBranchWithCustomer(@Param("hotelId") UUID hotelBranchId,
-                                                         @Param("statuses") List<EReceivableStatus> statuses);
+    List<Receivable> findActiveByOriginBranchWithCustomer(@Param("branchId") UUID branchId, @Param("statuses") List<EReceivableStatus> statuses);
 }
