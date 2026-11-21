@@ -371,7 +371,7 @@ class PosRestaurantStockEndToEndTest {
         UUID posCategoryId = posCategories.create(new CreatePOSProductCategoryRequest(branchId, "Drinks " + tag)).id();
         UUID sodaProductId = newPosProduct(branchId, posCategoryId, "SODA-" + tag, "Soda", "1000", soda.id(), true).id();
         UUID serviceProductId = newPosProduct(branchId, posCategoryId, "SVC-" + tag, "Service charge", "500", null, false).id();
-        UUID menuCategoryId = menuCategories.register(new CreateMenuCategoryRequest("Menu " + tag, restaurantId)).id();
+        UUID menuCategoryId = menuCategories.register(new CreateMenuCategoryRequest("Drinks", restaurantId, null)).id();
         UUID burgerMenuId = menuItems.register(new CreateMenuMasterRequest("Burger", new BigDecimal("5000"),
                 EMenuItemType.FOOD, EPackageType.PLATE, menuCategoryId, null, burger.id(), true)).id();
         UUID sodaMenuId = menuItems.register(new CreateMenuMasterRequest("Soda", new BigDecimal("1000"),
@@ -401,7 +401,7 @@ class PosRestaurantStockEndToEndTest {
 
     /** The caller becomes a staff member of the given branch, exactly as the JWT filter would set it up. */
     private void actAs(UUID branchId) {
-        StaffPrincipal principal = new StaffPrincipal(USER, STAFF, "e2e-tester", branchId);
+        StaffPrincipal principal = new StaffPrincipal(USER, STAFF, "e2e-tester",null, branchId);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, List.of()));
     }

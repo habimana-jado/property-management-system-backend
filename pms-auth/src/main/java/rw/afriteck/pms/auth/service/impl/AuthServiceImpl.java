@@ -3,12 +3,14 @@ package rw.afriteck.pms.auth.service.impl;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.auth.dtos.LoginRequest;
 import rw.afriteck.pms.auth.dtos.LoginResponse;
 import rw.afriteck.pms.auth.dtos.RefreshTokenRequest;
+import rw.afriteck.pms.auth.helpers.LoginNames;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
@@ -37,15 +39,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public LoginResponse login(LoginRequest request) {
+        String loginName = LoginNames.normalizeLogin(request.username())
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
         // Delegates to CustomUserDetailsService + the configured PasswordEncoder;
         // throws BadCredentialsException / DisabledException / LockedException
         // (mapped to 401) on failure.
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
+                new UsernamePasswordAuthenticationToken(loginName, request.password())
         );
 
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found", request.username()));
+        User user = userRepository.findByUsername(loginName)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found", loginName));
 
         requireActiveHotel(user.getStaff().getHotelId());
 

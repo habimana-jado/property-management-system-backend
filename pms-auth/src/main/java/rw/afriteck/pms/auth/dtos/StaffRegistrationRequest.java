@@ -14,8 +14,7 @@ public record StaffRegistrationRequest(
         String position,
         LocalDate hireDate,     // defaults to today if omitted
         @NotNull UUID hotelBranchId,
-
-        @NotBlank @Size(min = 4, max = 100) String username,
+        @NotBlank @Pattern(regexp = "^[A-Za-z0-9][A-Za-z0-9._-]{2,49}$") String username,
         @NotBlank @Size(min = 8) String password,
         @NotEmpty Set<UUID> roleIds
 ) {

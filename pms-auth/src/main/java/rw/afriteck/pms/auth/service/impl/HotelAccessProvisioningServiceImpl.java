@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.auth.dtos.ProvisionAdminRequest;
 import rw.afriteck.pms.auth.dtos.ProvisionedAdmin;
+import rw.afriteck.pms.auth.helpers.LoginNames;
 import rw.afriteck.pms.auth.model.Role;
 import rw.afriteck.pms.auth.model.Staff;
 import rw.afriteck.pms.auth.model.User;
@@ -33,9 +34,10 @@ public class HotelAccessProvisioningServiceImpl implements HotelAccessProvisioni
 
     @Override
     @Transactional
-    public ProvisionedAdmin provisionHotelAdmin(UUID hotelId, ProvisionAdminRequest request) {
-        if (userRepository.findByUsername(request.username()).isPresent()) {
-            throw new DuplicateResourceException("Username already taken: " + request.username());
+    public ProvisionedAdmin provisionHotelAdmin(UUID hotelId, String hotelCode, ProvisionAdminRequest request){
+        String loginName = LoginNames.compose(hotelCode, request.username());
+        if (userRepository.findByUsername(loginName).isPresent()) {
+            throw new DuplicateResourceException("Username already taken: " + loginName);
         }
 
         Role admin = new Role();
@@ -62,6 +64,6 @@ public class HotelAccessProvisioningServiceImpl implements HotelAccessProvisioni
         user.setRoles(new HashSet<>(Set.of(savedRole)));
         User savedUser = userRepository.save(user);
 
-        return new ProvisionedAdmin(savedStaff.getId(), savedUser.getId(), savedRole.getId(), savedUser.getUsername());
+        return new ProvisionedAdmin(savedStaff.getId(), savedUser.getId(), savedRole.getId(), loginName);
     }
 }

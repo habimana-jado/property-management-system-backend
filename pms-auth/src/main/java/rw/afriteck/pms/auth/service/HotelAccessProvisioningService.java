@@ -6,5 +6,5 @@ import rw.afriteck.pms.auth.dtos.ProvisionedAdmin;
 import java.util.UUID;
 
 public interface HotelAccessProvisioningService {
-    ProvisionedAdmin provisionHotelAdmin(UUID hotelId, ProvisionAdminRequest request);
+    ProvisionedAdmin provisionHotelAdmin(UUID hotelId, String hotelCode, ProvisionAdminRequest request);
 }

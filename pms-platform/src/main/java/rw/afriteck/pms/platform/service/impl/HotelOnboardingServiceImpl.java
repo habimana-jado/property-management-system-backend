@@ -24,7 +24,7 @@ public class HotelOnboardingServiceImpl implements HotelOnboardingService {
     @Override
     public OnboardHotelResponse onboard(OnboardHotelRequest request) {
         HotelResponse hotel = hotelService.create(request.hotel());
-        ProvisionedAdmin admin = provisioningService.provisionHotelAdmin(hotel.id(), request.admin());
+        ProvisionedAdmin admin = provisioningService.provisionHotelAdmin(hotel.id(), hotel.hotelCode(), request.admin());
         return new OnboardHotelResponse(hotel, admin.staffId(), admin.userId(), admin.username());
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.auth.dtos.StaffRegistrationRequest;
 import rw.afriteck.pms.auth.dtos.StaffResponse;
 import rw.afriteck.pms.auth.dtos.UpdateStaffProfileRequest;
+import rw.afriteck.pms.auth.helpers.LoginNames;
 import rw.afriteck.pms.common.exception.DuplicateResourceException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.auth.mapper.StaffMapper;
@@ -45,7 +46,8 @@ public class StaffServiceImpl implements StaffService {
         UUID hotelId = TenantContext.require();
         requireBranchInHotel(request.hotelBranchId(), hotelId);
 
-        if (userRepository.findByUsername(request.username()).isPresent()) {
+        String loginName = LoginNames.compose(hotelDirectory.hotelCodeOf(hotelId), request.username());
+        if (userRepository.findByUsername(loginName).isPresent()) {
             throw new DuplicateResourceException("Username already taken: " + request.username());
         }
         Set<Role> roles = resolveRoles(request.roleIds(), hotelId);
@@ -64,7 +66,7 @@ public class StaffServiceImpl implements StaffService {
 
         User user = new User();
         user.setStaff(savedStaff);
-        user.setUsername(request.username());
+        user.setUsername(loginName);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRoles(roles);
         User savedUser = userRepository.save(user);

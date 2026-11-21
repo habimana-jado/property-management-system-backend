@@ -54,7 +54,7 @@ class AuthServiceImplHotelCheckTest {
 
         User user = new User();
         user.setId(UUID.randomUUID());
-        user.setUsername("cashier1");
+        user.setUsername("LKS-cashier1");
         user.setStaff(staff);
         user.setRoles(new HashSet<>());
         user.setEnabled(true);
@@ -65,10 +65,10 @@ class AuthServiceImplHotelCheckTest {
     @Test
     void loginIsRefusedWhenTheHotelIsSuspended() {
         User user = userOf(hotelId);
-        when(userRepository.findByUsername("cashier1")).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername("LKS-cashier1")).thenReturn(Optional.of(user));
         when(hotelDirectory.isHotelActive(hotelId)).thenReturn(false);
 
-        assertThatThrownBy(() -> service.login(new LoginRequest("cashier1", "secret")))
+        assertThatThrownBy(() -> service.login(new LoginRequest("LKS-cashier1", "secret")))
                 .isInstanceOf(ForbiddenException.class);
 
         assertThat(user.getLastLoginAt()).isNull();   // no side effects for a refused login
@@ -76,10 +76,10 @@ class AuthServiceImplHotelCheckTest {
 
     @Test
     void loginIssuesATokenCarryingTheHotelWhenTheHotelIsActive() {
-        when(userRepository.findByUsername("cashier1")).thenReturn(Optional.of(userOf(hotelId)));
+        when(userRepository.findByUsername("LKS-cashier1")).thenReturn(Optional.of(userOf(hotelId)));
         when(hotelDirectory.isHotelActive(hotelId)).thenReturn(true);
 
-        LoginResponse response = service.login(new LoginRequest("cashier1", "secret"));
+        LoginResponse response = service.login(new LoginRequest("LKS-cashier1", "secret"));
 
         Claims claims = tokenProvider.parseClaims(response.accessToken());
         assertThat(claims.get("hotelId", String.class)).isEqualTo(hotelId.toString());
@@ -87,9 +87,9 @@ class AuthServiceImplHotelCheckTest {
 
     @Test
     void loginIsRefusedWhenTheStaffHasNoHotel() {
-        when(userRepository.findByUsername("cashier1")).thenReturn(Optional.of(userOf(null)));
+        when(userRepository.findByUsername("LKS-cashier1")).thenReturn(Optional.of(userOf(null)));
 
-        assertThatThrownBy(() -> service.login(new LoginRequest("cashier1", "secret")))
+        assertThatThrownBy(() -> service.login(new LoginRequest("LKS-cashier1", "secret")))
                 .isInstanceOf(ForbiddenException.class);
 
         verifyNoInteractions(hotelDirectory);
