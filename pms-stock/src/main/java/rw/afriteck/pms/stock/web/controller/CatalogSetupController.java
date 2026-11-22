@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import rw.afriteck.pms.common.security.PlatformPermissions;
 import rw.afriteck.pms.stock.api.CatalogSetupApi;
 import rw.afriteck.pms.stock.api.enums.EItemType;
 import rw.afriteck.pms.stock.api.query.ItemSearch;
@@ -31,13 +32,13 @@ public class CatalogSetupController {
     public List<UnitView> units() { return catalog.units(); }
 
     @PostMapping("/units")
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    @PreAuthorize(PlatformPermissions.Has.MANAGE_HOTELS)
     public ResponseEntity<UnitView> createUnit(@Valid @RequestBody UnitCommand c) {
         return ResponseEntity.status(HttpStatus.CREATED).body(catalog.createUnit(c));
     }
 
     @PatchMapping("/units/{id}")
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
+    @PreAuthorize(PlatformPermissions.Has.MANAGE_HOTELS)
     public UnitView renameUnit(@PathVariable UUID id, @Valid @RequestBody RenameRequest r) {
         return catalog.renameUnit(id, r.name());
     }

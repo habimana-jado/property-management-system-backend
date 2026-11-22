@@ -7,9 +7,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.*;
+import rw.afriteck.pms.restaurant.security.RestaurantPermissions;
 import rw.afriteck.pms.restaurant.service.OrderService;
 import rw.afriteck.pms.restaurant.service.TableBillService;
 import rw.afriteck.pms.restaurant.service.TableMasterService;
@@ -26,6 +28,7 @@ public class TableMasterController {
     private final TableBillService tableBillService;
 
     @PostMapping("/{tableId}/orders")
+    @PreAuthorize(RestaurantPermissions.Has.ORDER_PLACE)
     public ResponseEntity<OrderPlacementResponse> placeOrder(
             @PathVariable UUID tableId,
             @Valid @RequestBody PlaceOrderRequest request) {
@@ -34,18 +37,21 @@ public class TableMasterController {
     }
 
     @GetMapping("/{tableId}/bills")
+    @PreAuthorize(RestaurantPermissions.Has.BILL_VIEW)
     public ResponseEntity<TableBillResponse> requestBill(@PathVariable UUID tableId) {
         TableBillResponse response = tableBillService.requestBill(tableId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/{tableId}/request-bill")
+    @PreAuthorize(RestaurantPermissions.Has.BILL_REQUEST)
     public ResponseEntity<BillSnapshotResponse> requestBillCombined(@PathVariable UUID tableId) {
         BillSnapshotResponse response = tableBillService.requestBillItemsCombined(tableId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @PostMapping("/{sourceTableId}/split")
+    @PreAuthorize(RestaurantPermissions.Has.TABLE_SPLIT_MERGE)
     public ResponseEntity<TableSplitResponse> splitTable(
             @PathVariable("sourceTableId") UUID tableId,
             @Valid @RequestBody SplitTableRequest request) {
@@ -54,6 +60,7 @@ public class TableMasterController {
     }
 
     @PostMapping("/{targetTableId}/merge")
+    @PreAuthorize(RestaurantPermissions.Has.TABLE_SPLIT_MERGE)
     public ResponseEntity<TableBillResponse> mergeTable(
             @PathVariable("targetTableId") UUID tableId,
             @Valid @RequestBody MergeTableRequest request) {
@@ -62,6 +69,7 @@ public class TableMasterController {
     }
 
     @PostMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<TableMasterResponse> register(@Valid @RequestBody CreateTableMasterRequest tableMasterRequest) {
         TableMasterResponse tableMasterResponse = tableMasterService.register(tableMasterRequest);
         URI location = ServletUriComponentsBuilder
@@ -73,6 +81,7 @@ public class TableMasterController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<TableMasterResponse> update(@PathVariable("id") UUID id, @Valid @RequestBody CreateTableMasterRequest tableMasterRequest) {
         TableMasterResponse tableMasterResponse = tableMasterService.update(id, tableMasterRequest);
         URI location = ServletUriComponentsBuilder
@@ -84,26 +93,31 @@ public class TableMasterController {
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<TableMasterResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(tableMasterService.findAll(pageable));
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<TableMasterResponse>> findByHotelBranch(@PathVariable("hotelBranchId") UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable) {
         return ResponseEntity.ok(tableMasterService.findByHotelBranchId(hotelBranchId, pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<TableMasterResponse> findOne(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(tableMasterService.findOne(id));
     }
 
     @PatchMapping("/{id}/activate")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<TableMasterResponse> activate(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(tableMasterService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<TableMasterResponse> deactivate(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(tableMasterService.deactivate(id));
     }

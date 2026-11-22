@@ -4,11 +4,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import rw.afriteck.pms.restaurant.dtos.RecordPaymentRequest;
 import rw.afriteck.pms.restaurant.dtos.CompBillRequest;
 import rw.afriteck.pms.restaurant.dtos.TableBillResponse;
 import rw.afriteck.pms.restaurant.dtos.VoidItemRequest;
+import rw.afriteck.pms.restaurant.security.RestaurantPermissions;
 import rw.afriteck.pms.restaurant.service.OrderService;
 import rw.afriteck.pms.restaurant.service.TableBillService;
 
@@ -23,6 +25,7 @@ public class TableBillController {
     private final TableBillService tableBillService;
 
     @PostMapping("/{itemId}/void")
+    @PreAuthorize(RestaurantPermissions.Has.BILL_VOID_ITEM)
     public ResponseEntity<TableBillResponse> voidItemOrder(
             @PathVariable UUID itemId,
             @Valid @RequestBody VoidItemRequest request) {
@@ -31,6 +34,7 @@ public class TableBillController {
     }
 
     @PostMapping("/{tableBillId}/payments")
+    @PreAuthorize(RestaurantPermissions.Has.BILL_PAY)
     public ResponseEntity<TableBillResponse> recordPayment(
             @PathVariable UUID tableBillId,
             @Valid @RequestBody RecordPaymentRequest request) {
@@ -39,6 +43,7 @@ public class TableBillController {
     }
 
     @PostMapping("/{tableBillId}/comp")
+    @PreAuthorize(RestaurantPermissions.Has.BILL_COMP)
     public ResponseEntity<TableBillResponse> compBill(
             @PathVariable UUID tableBillId,
             @Valid @RequestBody CompBillRequest request) {

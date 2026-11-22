@@ -4,13 +4,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // turns on @PreAuthorize at the service layer
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -40,11 +43,22 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(eh -> eh.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/pms/auth/change-password").authenticated()
                         .requestMatchers("/api/v1/pms/auth/**").permitAll()
                         .requestMatchers("/api/v1/pms/actuator/health").permitAll()
                         .requestMatchers("/api/v1/pms/platform/auth/**").permitAll()
                         .requestMatchers("/api/v1/pms/platform/**").hasAnyAuthority(
                                 "PLATFORM_VIEW_HOTELS", "PLATFORM_MANAGE_HOTELS", "PLATFORM_MANAGE_OPERATORS")
+
+                        .anyRequest().access((authentication, context) -> {
+                            Authentication current = authentication.get();
+                            boolean allowed = current != null
+                                    && current.isAuthenticated()
+                                    && !(current instanceof AnonymousAuthenticationToken)
+                                    && current.getAuthorities().stream()
+                                    .noneMatch(g -> "PASSWORD_CHANGE_ONLY".equals(g.getAuthority()));
+                            return new AuthorizationDecision(allowed);
+                        })
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )

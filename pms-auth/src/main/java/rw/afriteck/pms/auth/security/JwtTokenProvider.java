@@ -32,7 +32,7 @@ public class JwtTokenProvider {
     }
 
     public String generateAccessToken(UUID userId, UUID staffId, String username, UUID hotelId,UUID hotelBranchId,
-                                      Set<String> roleNames, Set<String> permissionCodes) {
+                                      Set<String> roleNames, Set<String> permissionCodes, boolean mustChangePassword) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(userId))
@@ -43,6 +43,7 @@ public class JwtTokenProvider {
                 .claim("roles", roleNames)
                 .claim("authorities", permissionCodes)
                 .claim("type", "access")
+                .claim("mustChangePassword", mustChangePassword)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(accessTokenValidityMs)))
                 .signWith(key)
@@ -60,13 +61,14 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    public String generatePlatformAccessToken(UUID operatorId, String username, Set<String> authorities) {
+    public String generatePlatformAccessToken(UUID operatorId, String username, Set<String> authorities, boolean mustChangePassword) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(String.valueOf(operatorId))
                 .claim("username", username)
                 .claim("authorities", authorities)
                 .claim("type", "platform-access")
+                .claim("mustChangePassword", mustChangePassword)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plusMillis(accessTokenValidityMs)))
                 .signWith(key)

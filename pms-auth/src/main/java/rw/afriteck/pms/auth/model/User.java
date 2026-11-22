@@ -32,6 +32,11 @@ public class User extends Auditable {
     @Column(nullable = false)
     private String passwordHash;
 
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    private boolean mustChangePassword = false;
+
+    private Instant passwordChangedAt;
+
     @Column(nullable = false)
     private boolean enabled = true;
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import rw.afriteck.pms.auth.dtos.LoginRequest;
 import rw.afriteck.pms.auth.dtos.LoginResponse;
 import rw.afriteck.pms.auth.dtos.RefreshTokenRequest;
@@ -36,6 +37,9 @@ class AuthServiceImplHotelCheckTest {
     UserRepo userRepository;
     @Mock
     HotelDirectory hotelDirectory;
+    @Mock
+    PasswordEncoder passwordEncoder;
+
     private final JwtTokenProvider tokenProvider =
             new JwtTokenProvider("0123456789-0123456789-0123456789-0123", 900_000, 900_000);
     private AuthServiceImpl service;
@@ -44,7 +48,7 @@ class AuthServiceImplHotelCheckTest {
 
     @BeforeEach
     void setUp() {
-        service = new AuthServiceImpl(authenticationManager, userRepository, tokenProvider, hotelDirectory);
+        service = new AuthServiceImpl(authenticationManager, userRepository, tokenProvider, hotelDirectory, passwordEncoder);
     }
 
     private User userOf(UUID staffHotelId) {

@@ -40,16 +40,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     if ("access".equals(type)) {
                         StaffPrincipal principal = staffPrincipal(claims);
+                        boolean mustChange = Boolean.TRUE.equals(claims.get("mustChangePassword", Boolean.class));
+                        List<SimpleGrantedAuthority> grants = mustChange
+                                ? List.of(new SimpleGrantedAuthority("PASSWORD_CHANGE_ONLY"))
+                                : authorities(claims);
                         SecurityContextHolder.getContext().setAuthentication(
-                                new UsernamePasswordAuthenticationToken(principal, null, authorities(claims)));
+                                new UsernamePasswordAuthenticationToken(principal, null, grants));
                         if (principal.hotelId() != null) {
                             TenantContext.set(principal.hotelId());
                         }
-                    } else if ("platform-access".equals(type)) {
+                    }else if ("platform-access".equals(type)) {
                         PlatformPrincipal principal = new PlatformPrincipal(
                                 UUID.fromString(claims.getSubject()), claims.get("username", String.class));
+                        boolean mustChange = Boolean.TRUE.equals(claims.get("mustChangePassword", Boolean.class));
+                        List<SimpleGrantedAuthority> grants = mustChange
+                                ? List.of(new SimpleGrantedAuthority("PASSWORD_CHANGE_ONLY"))
+                                : authorities(claims);
                         SecurityContextHolder.getContext().setAuthentication(
-                                new UsernamePasswordAuthenticationToken(principal, null, authorities(claims)));
+                                new UsernamePasswordAuthenticationToken(principal, null, grants));
                         // deliberately no tenant: platform operators never act inside a hotel
                     }
                 }

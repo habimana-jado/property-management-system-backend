@@ -4,12 +4,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import rw.afriteck.pms.auth.dtos.PlatformPrincipal;
 import rw.afriteck.pms.auth.security.JwtAuthenticationFilter;
 import rw.afriteck.pms.auth.security.JwtTokenProvider;
 import rw.afriteck.pms.common.tenant.TenantContext;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -32,7 +34,7 @@ class JwtAuthenticationFilterTenantTest {
 
     private MockHttpServletRequest requestFor(UUID hotelId) {
         String token = provider.generateAccessToken(UUID.randomUUID(), UUID.randomUUID(), "cashier1",
-                hotelId, UUID.randomUUID(), Set.of("CASHIER"), Set.of("SALE_CREATE"));
+                hotelId, UUID.randomUUID(), Set.of("CASHIER"), Set.of("SALE_CREATE"), false);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + token);
         return request;
@@ -72,7 +74,7 @@ class JwtAuthenticationFilterTenantTest {
 
     @Test
     void platformTokenAuthenticatesAsOperator_andNeverSetsATenant() throws Exception {
-        String token = provider.generatePlatformAccessToken(UUID.randomUUID(), "op1", Set.of("PLATFORM_VIEW_HOTELS"));
+        String token = provider.generatePlatformAccessToken(UUID.randomUUID(), "op1", Set.of("PLATFORM_VIEW_HOTELS"), false);
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer " + token);
         AtomicReference<Optional<UUID>> tenantSeen = new AtomicReference<>();
@@ -85,5 +87,35 @@ class JwtAuthenticationFilterTenantTest {
 
         assertThat(principalSeen.get()).isInstanceOf(PlatformPrincipal.class);
         assertThat(tenantSeen.get()).isEmpty();
+    }
+
+    @Test
+    void aMustChangePasswordTokenCarriesOnlyThePasswordChangeAuthority() throws Exception {
+        String token = provider.generateAccessToken(UUID.randomUUID(), UUID.randomUUID(), "LKS-cashier1",
+                UUID.randomUUID(), UUID.randomUUID(), Set.of("CASHIER"), Set.of("SALE_CREATE"), true);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + token);
+        AtomicReference<List<String>> seen = new AtomicReference<>();
+
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> seen.set(
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).toList()));
+
+        assertThat(seen.get()).containsExactly("PASSWORD_CHANGE_ONLY");
+    }
+
+    @Test
+    void aMustChangePasswordOperatorTokenCarriesOnlyThePasswordChangeAuthority() throws Exception {
+        String token = provider.generatePlatformAccessToken(
+                UUID.randomUUID(), "op1", Set.of("PLATFORM_MANAGE_HOTELS"), true);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer " + token);
+        AtomicReference<List<String>> seen = new AtomicReference<>();
+
+        filter.doFilter(request, new MockHttpServletResponse(), (req, res) -> seen.set(
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority).toList()));
+
+        assertThat(seen.get()).containsExactly("PASSWORD_CHANGE_ONLY");
     }
 }

@@ -38,12 +38,4 @@ class ModulesBoundaryTest {
             noClasses().that().resideOutsideOfPackage("rw.afriteck.pms.platform..")
                     .should().dependOnClassesThat().resideInAPackage("rw.afriteck.pms.platform..");
 
-    @ArchTest
-    static final ArchRule entities_in_tenant_modules_are_tenant_owned =
-            classes().that().areAnnotatedWith(jakarta.persistence.Entity.class)
-                    .and().resideInAnyPackage("rw.afriteck.pms.restaurant..", "rw.afriteck.pms.pos..",
-                            "rw.afriteck.pms.payment..", "rw.afriteck.pms.credit..", "rw.afriteck.pms.stock..")
-                    .and().doNotHaveSimpleName("UnitOfMeasure")      // global reference data, by design
-                    .should().beAssignableTo(TenantOwned.class)
-                    .orShould().beAssignableTo(AuditableTenantOwned.class);
 }

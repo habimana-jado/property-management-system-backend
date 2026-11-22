@@ -4,14 +4,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.auth.dtos.StaffRegistrationRequest;
 import rw.afriteck.pms.auth.dtos.StaffResponse;
+import rw.afriteck.pms.auth.dtos.TemporaryPasswordResponse;
 import rw.afriteck.pms.auth.dtos.UpdateStaffProfileRequest;
 import rw.afriteck.pms.auth.helpers.LoginNames;
+import rw.afriteck.pms.auth.helpers.PasswordResetRules;
+import rw.afriteck.pms.auth.helpers.TemporaryPasswordIssuer;
+import rw.afriteck.pms.auth.model.Permission;
+import rw.afriteck.pms.auth.security.StaffPrincipal;
 import rw.afriteck.pms.common.exception.DuplicateResourceException;
+import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 import rw.afriteck.pms.auth.mapper.StaffMapper;
 import rw.afriteck.pms.auth.model.Role;
@@ -21,6 +30,7 @@ import rw.afriteck.pms.auth.repository.RoleRepo;
 import rw.afriteck.pms.auth.repository.StaffRepo;
 import rw.afriteck.pms.auth.repository.UserRepo;
 import rw.afriteck.pms.auth.service.StaffService;
+import rw.afriteck.pms.common.security.BranchAccessGuard;
 import rw.afriteck.pms.common.tenant.HotelDirectory;
 import rw.afriteck.pms.common.tenant.TenantContext;
 
@@ -38,10 +48,11 @@ public class StaffServiceImpl implements StaffService {
     private final PasswordEncoder passwordEncoder;
     private final StaffMapper staffMapper;
     private final HotelDirectory hotelDirectory;
+    private final TemporaryPasswordIssuer passwordIssuer;
+    private final BranchAccessGuard branchAccess;
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public StaffResponse registerStaff(StaffRegistrationRequest request) {
         UUID hotelId = TenantContext.require();
         requireBranchInHotel(request.hotelBranchId(), hotelId);
@@ -68,6 +79,7 @@ public class StaffServiceImpl implements StaffService {
         user.setStaff(savedStaff);
         user.setUsername(loginName);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setMustChangePassword(true);
         user.setRoles(roles);
         User savedUser = userRepository.save(user);
 
@@ -76,7 +88,6 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public StaffResponse updateProfile(UUID staffId, UpdateStaffProfileRequest request) {
         if (request.hotelBranchId() != null) {
             requireBranchInHotel(request.hotelBranchId(), TenantContext.require());
@@ -98,8 +109,33 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
+    @Transactional
+    public TemporaryPasswordResponse resetPassword(UUID staffId) {
+        Staff staff = findStaffOrThrow(staffId);                      // tenant-scoped lookup
+        branchAccess.requireAccessTo(staff.getHotelBranchId());       // branch staff only reach their own branch
+
+        User target = userRepository.findByStaffId(staff.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for staff", staffId));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication.getPrincipal() instanceof StaffPrincipal requester)) {
+            throw new ForbiddenException("STAFF_ONLY", "Only hotel staff can reset passwords here");
+        }
+        Set<String> requesterAuthorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority).collect(Collectors.toSet());
+        Set<String> targetPermissions = target.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(Permission::getCode).collect(Collectors.toSet());
+
+        PasswordResetRules.requireAllowed(requester.userId(), target.getId(), requesterAuthorities, targetPermissions);
+
+        String temporary = passwordIssuer.issueFor(target);
+//        log.info("Password reset for {} by {}", target.getUsername(), requester.username());   // never log the password
+        return new TemporaryPasswordResponse(target.getUsername(), temporary);
+    }
+
+    @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public StaffResponse getStaff(UUID staffId) {
         Staff staff = findStaffOrThrow(staffId);
         User user = userRepository.findByStaffId(staffId).orElseThrow(() -> new ResourceNotFoundException("User", staffId));
@@ -108,7 +144,6 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<StaffResponse> findByHotelBranch(UUID hotelBranchId, Pageable pageable) {
         Page<Staff> staffList = staffRepository.findByHotelIdAndHotelBranchId(
                 TenantContext.require(), hotelBranchId, pageable);

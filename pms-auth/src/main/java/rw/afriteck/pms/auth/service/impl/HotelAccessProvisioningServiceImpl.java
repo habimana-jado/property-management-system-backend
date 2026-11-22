@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import rw.afriteck.pms.auth.dtos.ProvisionAdminRequest;
 import rw.afriteck.pms.auth.dtos.ProvisionedAdmin;
+import rw.afriteck.pms.auth.dtos.TemporaryPasswordResponse;
 import rw.afriteck.pms.auth.helpers.LoginNames;
+import rw.afriteck.pms.auth.helpers.TemporaryPasswordIssuer;
 import rw.afriteck.pms.auth.model.Role;
 import rw.afriteck.pms.auth.model.Staff;
 import rw.afriteck.pms.auth.model.User;
@@ -16,6 +18,7 @@ import rw.afriteck.pms.auth.repository.StaffRepo;
 import rw.afriteck.pms.auth.repository.UserRepo;
 import rw.afriteck.pms.auth.service.HotelAccessProvisioningService;
 import rw.afriteck.pms.common.exception.DuplicateResourceException;
+import rw.afriteck.pms.common.exception.ResourceNotFoundException;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -31,6 +34,7 @@ public class HotelAccessProvisioningServiceImpl implements HotelAccessProvisioni
     private final StaffRepo staffRepository;
     private final UserRepo userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TemporaryPasswordIssuer passwordIssuer;
 
     @Override
     @Transactional
@@ -61,9 +65,22 @@ public class HotelAccessProvisioningServiceImpl implements HotelAccessProvisioni
         user.setStaff(savedStaff);
         user.setUsername(request.username());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setMustChangePassword(true);
         user.setRoles(new HashSet<>(Set.of(savedRole)));
         User savedUser = userRepository.save(user);
 
         return new ProvisionedAdmin(savedStaff.getId(), savedUser.getId(), savedRole.getId(), loginName);
+    }
+
+    @Transactional
+    @Override
+    public TemporaryPasswordResponse resetStaffPassword(UUID hotelId, UUID staffId) {
+        Staff staff = staffRepository.findByIdAndHotelId(staffId, hotelId)
+                .orElseThrow(() -> new ResourceNotFoundException("Staff not found", staffId));
+        User user = userRepository.findByStaffId(staff.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for staff", staffId));
+
+        String temporary = passwordIssuer.issueFor(user);
+        return new TemporaryPasswordResponse(user.getUsername(), temporary);
     }
 }

@@ -6,13 +6,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.*;
+import rw.afriteck.pms.restaurant.security.RestaurantPermissions;
 import rw.afriteck.pms.restaurant.service.MenuCategoryService;
 import rw.afriteck.pms.restaurant.service.MenuMasterService;
 import rw.afriteck.pms.restaurant.service.RestaurantService;
 import rw.afriteck.pms.restaurant.service.TableMasterService;
+import rw.afriteck.pms.stock.web.security.StockPermissions;
 
 import java.net.URI;
 import java.util.List;
@@ -28,6 +31,7 @@ public class RestaurantController {
     private final MenuMasterService menuMasterService;
 
     @PostMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<RestaurantResponse> registerRestaurant(@Valid @RequestBody CreateRestaurantRequest restaurantRequest){
         RestaurantResponse restaurantResponse = this.restaurantService.create(restaurantRequest);
         URI location = ServletUriComponentsBuilder
@@ -39,6 +43,7 @@ public class RestaurantController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<RestaurantResponse> updateRestaurant(@PathVariable("id") UUID id, @Valid @RequestBody CreateRestaurantRequest restaurantRequest){
         RestaurantResponse restaurantResponse = this.restaurantService.update(id, restaurantRequest);
         URI location = ServletUriComponentsBuilder
@@ -50,46 +55,55 @@ public class RestaurantController {
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<RestaurantResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(restaurantService.findAll(pageable));
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<RestaurantResponse>> findByHotelBranch(@RequestParam UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(restaurantService.findByHotelBranchAndActive(hotelBranchId, pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<RestaurantResponse> findOne(@PathVariable("id") UUID id){
         return ResponseEntity.ok(this.restaurantService.findOne(id));
     }
 
     @GetMapping("/{id}/tables")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<TableMasterResponse>> findTables(@PathVariable("id") UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(this.tableMasterService.findByRestaurantAndActive(id, pageable));
     }
 
     @GetMapping("/{id}/menu-categories")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<MenuCategoryResponse>> findMenuCategories(@PathVariable UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(menuCategoryService.findByRestaurant(id, pageable));
     }
 
     @GetMapping("/{id}/menu-items")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<MenuMasterResponse>> findMenuItems(@PathVariable UUID id, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(menuMasterService.findByRestaurantAndActive(id, pageable));
     }
 
     @GetMapping("/{restaurantId}/menu-items/search")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<List<MenuItemsByCategoryResponse>> search(@PathVariable UUID restaurantId, @RequestParam(required = false) String keyword) {
         return ResponseEntity.ok(restaurantService.searchMenuItemsGrouped(restaurantId, keyword));
     }
 
     @PatchMapping("/{id}/activate")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<RestaurantResponse> activate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(restaurantService.activate(id));
     }
 
     @PatchMapping("/{id}/deactivate")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<RestaurantResponse> deactivate(@PathVariable("id") UUID id){
         return ResponseEntity.ok(restaurantService.deactivate(id));
     }

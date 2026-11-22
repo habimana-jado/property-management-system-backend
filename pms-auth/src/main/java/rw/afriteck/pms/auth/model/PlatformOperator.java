@@ -30,6 +30,9 @@ public class PlatformOperator extends Auditable {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(name = "must_change_password", nullable = false, columnDefinition = "boolean default false")
+    private boolean mustChangePassword = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EPlatformRole role;

@@ -6,10 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import rw.afriteck.pms.restaurant.dtos.CreateMenuCategoryRequest;
 import rw.afriteck.pms.restaurant.dtos.MenuCategoryResponse;
+import rw.afriteck.pms.restaurant.security.RestaurantPermissions;
 import rw.afriteck.pms.restaurant.service.MenuCategoryService;
 
 import java.net.URI;
@@ -22,6 +24,7 @@ public class MenuCategoryController {
     private final MenuCategoryService menuCategoryService;
 
     @PostMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<MenuCategoryResponse> register(@Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
         MenuCategoryResponse menuCategoryResponse = menuCategoryService.register(menuCategoryRequest);
         URI location = ServletUriComponentsBuilder
@@ -33,6 +36,7 @@ public class MenuCategoryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_MANAGE)
     public ResponseEntity<MenuCategoryResponse> update(@PathVariable("id") UUID id, @Valid @RequestBody CreateMenuCategoryRequest menuCategoryRequest){
         MenuCategoryResponse menuCategoryResponse = menuCategoryService.update(id, menuCategoryRequest);
         URI location = ServletUriComponentsBuilder
@@ -44,16 +48,19 @@ public class MenuCategoryController {
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<MenuCategoryResponse>> findAll(@PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(menuCategoryService.findAll(pageable));
     }
 
     @GetMapping
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<Page<MenuCategoryResponse>> findByHotelBranch(@PathVariable("hotelBranchId") UUID hotelBranchId, @PageableDefault(size = 20, sort = "id") Pageable pageable){
         return ResponseEntity.ok(menuCategoryService.findByHotelBranchId(hotelBranchId,pageable));
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize(RestaurantPermissions.Has.SETUP_VIEW)
     public ResponseEntity<MenuCategoryResponse> findOne(@PathVariable("id")UUID id){
         return ResponseEntity.ok(menuCategoryService.findOne(id));
     }

@@ -5,12 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import rw.afriteck.pms.auth.dtos.ChangePasswordRequest;
 import rw.afriteck.pms.auth.dtos.LoginRequest;
 import rw.afriteck.pms.auth.dtos.LoginResponse;
 import rw.afriteck.pms.auth.dtos.RefreshTokenRequest;
 import rw.afriteck.pms.auth.helpers.LoginNames;
+import rw.afriteck.pms.auth.helpers.PasswordPolicy;
 import rw.afriteck.pms.common.exception.BusinessRuleViolationException;
 import rw.afriteck.pms.common.exception.ForbiddenException;
 import rw.afriteck.pms.common.exception.ResourceNotFoundException;
@@ -23,6 +26,7 @@ import rw.afriteck.pms.auth.service.AuthService;
 import rw.afriteck.pms.common.tenant.HotelDirectory;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -35,6 +39,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepo userRepository;
     private final JwtTokenProvider tokenProvider;
     private final HotelDirectory hotelDirectory;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
@@ -77,9 +82,36 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessRuleViolationException("ACCOUNT_LOCKED", "Account is disabled or locked");
         }
 
+        Instant changedAt = user.getPasswordChangedAt();
+        if (changedAt != null && claims.getIssuedAt().toInstant().isBefore(changedAt.truncatedTo(ChronoUnit.SECONDS))) {
+            throw new BusinessRuleViolationException("INVALID_TOKEN", "The password was changed. Please sign in again");
+        }
+
         requireActiveHotel(user.getStaff().getHotelId());
 
         return issueTokens(user);
+    }
+
+    @Override
+    @Transactional
+    public LoginResponse changePassword(UUID userId, ChangePasswordRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found", userId));
+
+        // a business error, not a 401: a 401 would make clients think their token expired
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleViolationException("CURRENT_PASSWORD_INCORRECT", "The current password is incorrect");
+        }
+        PasswordPolicy.validate(request.newPassword(), user.getUsername());
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleViolationException("PASSWORD_UNCHANGED", "The new password must differ from the current one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setMustChangePassword(false);
+        user.setPasswordChangedAt(Instant.now());
+
+        return issueTokens(user);   // fresh tokens without the restriction; older refresh tokens stop working
     }
 
     private LoginResponse issueTokens(User user) {
@@ -95,11 +127,11 @@ public class AuthServiceImpl implements AuthService {
         UUID hotelId = user.getStaff().getHotelId();
         String accessToken = tokenProvider.generateAccessToken(
                 user.getId(), user.getStaff().getId(), user.getUsername(), hotelId,
-                user.getStaff().getHotelBranchId(), roleNames, permissionCodes);
+                user.getStaff().getHotelBranchId(), roleNames, permissionCodes, user.isMustChangePassword());
 
         String refreshToken = tokenProvider.generateRefreshToken(user.getId());
 
-        return new LoginResponse(accessToken, refreshToken, tokenProvider.getAccessTokenValidityMs() / 1000);
+        return new LoginResponse(accessToken, refreshToken, tokenProvider.getAccessTokenValidityMs() / 1000, user.isMustChangePassword());
     }
 
     private void requireActiveHotel(UUID hotelId) {

@@ -29,7 +29,6 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public HotelResponse create(CreateHotelRequest request) {
         Hotel hotel = hotelMapper.toEntity(request);
         hotel.setStatus(ERecordStatus.ACTIVE);
@@ -43,21 +42,18 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('PLATFORM_VIEW_HOTELS')")
     public Page<HotelResponse> findAll(Pageable pageable) {
         return hotelRepo.findAll(pageable).map(hotelMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('PLATFORM_VIEW_HOTELS')")
     public HotelResponse findOne(UUID hotelId) {
         return hotelMapper.toResponse(getOrThrow(hotelId));
     }
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public HotelResponse update(UUID hotelId, CreateHotelRequest request) {
         Hotel hotel = getOrThrow(hotelId);
         requireSameHotelCode(hotel, request);
@@ -67,7 +63,6 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public HotelResponse activate(UUID hotelId) {
         Hotel hotel = getOrThrow(hotelId);
         hotel.setStatus(ERecordStatus.ACTIVE);
@@ -76,7 +71,6 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('PLATFORM_MANAGE_HOTELS')")
     public HotelResponse deactivate(UUID hotelId) {
         Hotel hotel = getOrThrow(hotelId);
         hotel.setStatus(ERecordStatus.INACTIVE);
@@ -92,7 +86,6 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('HOTEL_PROFILE_MANAGE')")
     public HotelResponse updateCurrent(CreateHotelRequest request) {
         Hotel hotel = getOrThrow(TenantContext.require());
         requireSameHotelCode(hotel, request);

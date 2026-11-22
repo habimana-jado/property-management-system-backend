@@ -34,7 +34,6 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public RoleResponse createRole(CreateRoleRequest request) {
         UUID hotelId = TenantContext.require();
         if (roleRepository.existsByHotelIdAndName(hotelId, request.name())) {
@@ -53,7 +52,6 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public RoleResponse updateRolePermissions(UUID roleId, UpdateRolePermissionsRequest request) {
         Role role = findRoleOrThrow(roleId);
         role.setPermissions(resolvePermissions(request.permissionCodes()));
@@ -63,21 +61,18 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<RoleResponse> getAllRoles() {
         return roleRepository.findByHotelId(TenantContext.require()).stream().map(roleMapper::toResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public RoleResponse getRole(UUID roleId) {
         return roleMapper.toResponse(findRoleOrThrow(roleId));
     }
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public void deleteRole(UUID roleId) {
         Role role = findRoleOrThrow(roleId);
         if (role.isSystemDefined()) {
@@ -88,7 +83,6 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAuthority('STAFF_MANAGE')")
     public List<PermissionResponse> getAllPermissions() {
         return permissionRepository.findAll().stream().map(roleMapper::toResponse).toList();
     }

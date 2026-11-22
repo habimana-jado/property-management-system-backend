@@ -3,6 +3,7 @@ package rw.afriteck.pms.auth.service;
 import org.springframework.data.domain.Pageable;
 import rw.afriteck.pms.auth.dtos.StaffRegistrationRequest;
 import rw.afriteck.pms.auth.dtos.StaffResponse;
+import rw.afriteck.pms.auth.dtos.TemporaryPasswordResponse;
 import rw.afriteck.pms.auth.dtos.UpdateStaffProfileRequest;
 
 import java.util.List;
@@ -17,4 +18,6 @@ public interface StaffService {
     StaffResponse getStaff(UUID staffId);
 
     List<StaffResponse> findByHotelBranch(UUID hotelBranchId, Pageable pageable);
+
+    TemporaryPasswordResponse resetPassword(UUID staffId);
 }
